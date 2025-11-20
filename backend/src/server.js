@@ -262,6 +262,8 @@ app.get('/api/entities/:entity', authRequired, async (req, res) => {
       where.created_by = req.user.email;
     } else if (model === 'notification') {
       where.recipient_email = req.user.email;
+    } else if (model === 'post') {
+      where.admin_hidden = false;
     }
   }
   const items = await prisma[model].findMany({

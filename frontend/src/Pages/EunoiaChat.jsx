@@ -208,13 +208,14 @@ export default function EunoiaChat() {
     }
   }, [currentUser]);
 
-  const getInitialGreeting = () => {
+  const getInitialGreeting = (styleNameArg) => {
     const greetings = {
       '暖心陪伴': '你好呀！我在这里陪伴你、倾听你。今天过得怎么样？有什么想和我分享的吗？😊',
       '灵感火花': '嗨！很高兴见到你！✨ 今天有什么有趣的想法或者困扰吗？我们一起来探索吧！',
       '冷静分析': '你好。我可以帮你理性地分析和解决问题。请告诉我，目前有什么需要思考的事情吗？'
     };
-    return greetings[currentStyle] || greetings['暖心陪伴'];
+    const styleKey = styleNameArg || currentStyle;
+    return greetings[styleKey] || greetings['暖心陪伴'];
   };
 
   const buildSystemPrompt = () => {
@@ -346,12 +347,17 @@ export default function EunoiaChat() {
       setCurrentAiAvatar(newAvatar);
     }
     
-    // 添加风格切换提示消息
-    if (messages.length > 1 && previousStyle !== styleName) {
-      const greeting = getInitialGreeting();
+    // 添加风格切换提示消息 / 更新首条问候
+    const nextGreeting = getInitialGreeting(styleName);
+    if (messages.length > 0 && messages[0]?.isFirst && !messages[0].isUser) {
+      const refreshed = messages.map((msg, idx) =>
+        idx === 0 ? { ...msg, text: nextGreeting, aiAvatar: newAvatar, styleName } : msg
+      );
+      setMessages(refreshed);
+    } else if (messages.length > 1 && previousStyle !== styleName) {
       const switchMessage = {
         id: messages.length + 1,
-        text: greeting,
+        text: nextGreeting,
         isUser: false,
         isFirst: true,
         aiAvatar: newAvatar,
