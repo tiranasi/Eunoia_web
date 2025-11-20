@@ -518,9 +518,9 @@ export default function EunoiaChat() {
   const showWarning = !isPlusUser && currentCount >= 25; // Show warning for free users when count is 25 or more
 
   return (
-    <div className="h-screen flex flex-col bg-gradient-to-b from-teal-50/30 to-white">
+    <div className="h-screen flex flex-col bg-gradient-to-b from-teal-50/30 to-white min-h-0">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 pt-safe pb-3 flex items-center justify-between flex-shrink-0 sticky top-0 z-30">
+      <div className="bg-white border-b border-gray-100 px-4 pt-safe pb-3 flex items-center justify-between flex-shrink-0 sticky top-0 z-40">
         <div className="flex items-center gap-3">
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetTrigger asChild>
@@ -528,7 +528,7 @@ export default function EunoiaChat() {
                 <Menu className="w-5 h-5" strokeWidth={1.5} />
               </Button>
             </SheetTrigger>
-            <SheetContent side="left" className="w-80">
+            <SheetContent side="left" className="w-80 z-50">
               <SheetHeader className="mb-4">
                 <SheetTitle>对话历史</SheetTitle>
               </SheetHeader>
@@ -597,8 +597,8 @@ export default function EunoiaChat() {
         const bottomPaddingPx = basePad + warningPad + quickPad;
         return (
           <div
-            className="flex-1 overflow-y-auto px-4 pb-4"
-            style={{ paddingBottom: `${bottomPaddingPx}px`, paddingTop: '96px', scrollPaddingTop: '96px' }}
+            className="flex-1 min-h-0 overflow-y-auto px-4 pb-4"
+            style={{ paddingBottom: `${bottomPaddingPx}px` }}
           >
         
         <div className="max-w-lg mx-auto">
