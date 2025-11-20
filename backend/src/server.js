@@ -24,6 +24,10 @@ const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 try { fs.mkdirSync(UPLOAD_DIR, { recursive: true }); } catch {}
 app.use('/api/uploads', express.static(UPLOAD_DIR));
 
+// Admin defaults
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@eunoia.local';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Eunoia100390';
+
 // Helper: normalize entity name to model
 const entityMap = {
   Post: 'post',
@@ -540,13 +544,13 @@ app.post('/api/integrations/core/uploadFile', authRequired, upload.single('file'
 });
 
 const PORT = process.env.PORT || 3001;
-ensureAdminUser()
-  .catch((err) => console.error('Admin bootstrap failed:', err))
-  .finally(() => {
-    app.listen(PORT, '127.0.0.1', () => {
-      console.log(`API server on http://127.0.0.1:${PORT}`);
-    });
+(async () => {
+  try {
+    await ensureAdminUser();
+  } catch (err) {
+    console.error('Admin bootstrap failed:', err);
+  }
+  app.listen(PORT, '127.0.0.1', () => {
+    console.log(`API server on http://127.0.0.1:${PORT}`);
   });
-// Admin bootstrap (single admin)
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@eunoia.local';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Eunoia100390';
+})();
