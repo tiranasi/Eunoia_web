@@ -164,18 +164,18 @@ export default function EunoiaChat() {
   }, [isAiTyping]);
 
   useEffect(() => {
-    // 检查 URL 参数中是否有 style 参数（从导入跳转过来）
+    // ??? URL ??????????? style ????????????????????
     const styleParam = searchParams.get('style');
+    const hasMessages = messages.length > 0;
     if (styleParam && customStyles.length > 0) {
       const importedStyle = customStyles.find(s => s.name === styleParam);
       if (importedStyle) {
         handleStyleChange(importedStyle.name, importedStyle.avatar);
-        // 清除 URL 参数，保留路径
         window.history.replaceState({}, '', createPageUrl(window.location.pathname));
       }
-    } else if (chatHistories.length > 0 && !currentChatId) {
+    } else if (chatHistories.length > 0 && !currentChatId && !hasMessages) {
       loadChat(chatHistories[0]);
-    } else if (chatHistories.length === 0 && !currentChatId) {
+    } else if (chatHistories.length === 0 && !currentChatId && !hasMessages) {
       const greeting = getInitialGreeting();
       setMessages([{
         id: 1,
@@ -185,10 +185,9 @@ export default function EunoiaChat() {
         aiAvatar: currentAiAvatar,
         styleName: currentStyle,
       }]);
-      setHasUserSentMessage(false); // Ensure it's false for initial greeting
+      setHasUserSentMessage(false);
     }
-  }, [chatHistories, customStyles, currentAiAvatar, currentStyle, searchParams]);
-
+  }, [chatHistories, customStyles, currentAiAvatar, currentStyle, searchParams, messages]);
   const resetDailyCounts = async () => {
     const today = todayDateStr();
     const stored = getDateOnly(currentUser?.daily_chat_reset_date);
@@ -714,5 +713,4 @@ export default function EunoiaChat() {
     </div>
   );
 }
-
 
