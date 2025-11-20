@@ -131,14 +131,14 @@ export default function CreateStyle() {
           <div className="flex gap-4 mb-4">
             <Button
               variant={avatarType === 'emoji' ? 'default' : 'outline'}
-              className="flex-1 rounded-2xl"
+              className="flex-1 rounded-2xl inline-flex items-center justify-center gap-2"
               onClick={() => setAvatarType('emoji')}
             >
               😊 Emoji
             </Button>
             <Button
               variant={avatarType === 'image' ? 'default' : 'outline'}
-              className="flex-1 rounded-2xl"
+              className="flex-1 rounded-2xl inline-flex items-center justify-center gap-2"
               onClick={() => setAvatarType('image')}
             >
               <ImageIcon className="w-4 h-4 mr-2" />

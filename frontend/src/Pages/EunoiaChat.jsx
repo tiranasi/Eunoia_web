@@ -596,7 +596,10 @@ export default function EunoiaChat() {
         const quickPad = messages.length <= 2 ? 48 : 0; // 快捷建议区域
         const bottomPaddingPx = basePad + warningPad + quickPad;
         return (
-          <div className="flex-1 overflow-y-auto px-4 pb-4 pt-6" style={{ paddingBottom: `${bottomPaddingPx}px` }}>
+          <div
+            className="flex-1 overflow-y-auto px-4 pb-4"
+            style={{ paddingBottom: `${bottomPaddingPx}px`, paddingTop: '96px', scrollPaddingTop: '96px' }}
+          >
         
         <div className="max-w-lg mx-auto">
           {messages.map((message) => (
