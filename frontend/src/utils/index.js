@@ -22,6 +22,7 @@ export const createPageUrl = (page) => {
     MyPost: '/my-post',
     Replies: '/replies',
     PlusSubscription: '/plus',
+    Admin: '/admin',
   };
   return map[page] || `/${page}`;
 };

@@ -29,6 +29,7 @@ import EunoiaMe from '@/Pages/EunoiaMe';
 import Login from '@/Pages/Login';
 import Register from '@/Pages/Register';
 import Drafts from '@/Pages/Drafts';
+import Admin from '@/Pages/Admin';
 
 const qc = new QueryClient();
 
@@ -49,11 +50,27 @@ function RequireAuth({ children }) {
   return children;
 }
 
+function RequireAdmin({ children }) {
+  const location = useLocation();
+  const token = (() => {
+    try {
+      return localStorage.getItem('token');
+    } catch {
+      return null;
+    }
+  })();
+  const role = (() => { try { return localStorage.getItem('role') || 'user'; } catch { return 'user'; } })();
+  if (!token) return <Navigate to="/login" state={{ from: location }} replace />;
+  if (role !== 'admin') return <Navigate to="/" replace />;
+  return children;
+}
+
 function AppRoutes() {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
       <Route path="/register" element={<Register />} />
+      <Route path="/admin" element={<RequireAdmin><Admin /></RequireAdmin>} />
 
       <Route path="/" element={<RequireAuth><EunoiaHome /></RequireAuth>} />
       <Route path="/chat" element={<RequireAuth><EunoiaChat /></RequireAuth>} />

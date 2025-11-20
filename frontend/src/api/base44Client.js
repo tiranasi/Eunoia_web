@@ -58,7 +58,10 @@ export const base44 = {
     },
     async login({ email, password }) {
       const data = await http('POST', `${API_BASE}/auth/login`, { email, password });
-      try { localStorage.setItem('token', data.token); } catch {}
+      try {
+        localStorage.setItem('token', data.token);
+        if (data.role) localStorage.setItem('role', data.role);
+      } catch {}
       return data;
     },
     async me() {
@@ -100,6 +103,29 @@ export const base44 = {
         if (!res.ok) throw new Error(`HTTP ${res.status}: ${await res.text()}`);
         return res.json();
       },
+    },
+  },
+  admin: {
+    async listPosts({ order, limit } = {}) {
+      return http('GET', `${API_BASE}/admin/posts${qs({ order, limit })}`);
+    },
+    async updatePost(id, data) {
+      return http('PUT', `${API_BASE}/admin/posts/${id}`, data);
+    },
+    async listChatStyles({ order, limit } = {}) {
+      return http('GET', `${API_BASE}/admin/chat-styles${qs({ order, limit })}`);
+    },
+    async updateChatStyle(id, data) {
+      return http('PUT', `${API_BASE}/admin/chat-styles/${id}`, data);
+    },
+    async listUsers({ order, limit } = {}) {
+      return http('GET', `${API_BASE}/admin/users${qs({ order, limit })}`);
+    },
+    async updateUser(id, data) {
+      return http('PUT', `${API_BASE}/admin/users/${id}`, data);
+    },
+    async stats() {
+      return http('GET', `${API_BASE}/admin/stats`);
     },
   },
 };

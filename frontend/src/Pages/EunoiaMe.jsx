@@ -55,6 +55,7 @@ export default function EunoiaMe() {
     queryKey: ['currentUser'],
     queryFn: () => base44.auth.me(),
   });
+  const isAdmin = (user?.role || (() => { try { return localStorage.getItem('role'); } catch { return null; } })()) === 'admin';
 
   const { data: reports = [] } = useQuery({
     queryKey: ['emotionReports'],
@@ -121,6 +122,16 @@ export default function EunoiaMe() {
                   <span className="absolute top-2 right-2 w-2 h-2 bg-pink-500 rounded-full" />
                 )}
               </Button>
+              {isAdmin && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="rounded-full px-3 h-8 text-xs"
+                  onClick={() => navigate(createPageUrl('Admin'))}
+                >
+                  Admin
+                </Button>
+              )}
               <Button variant="ghost" size="icon" className="rounded-full flex items-center justify-center">
                 <Settings className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
               </Button>

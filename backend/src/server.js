@@ -405,6 +405,26 @@ app.get('/api/admin/users', authRequired, adminRequired, async (req, res) => {
   res.json(users);
 });
 
+app.put('/api/admin/users/:id', authRequired, adminRequired, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).send('Invalid id');
+  const { role, subscription_tier } = req.body || {};
+  const data = {};
+  if (role) data.role = role;
+  if (subscription_tier) data.subscription_tier = subscription_tier;
+  if (Object.keys(data).length === 0) return res.status(400).send('No valid fields');
+  const updated = await prisma.user.update({ where: { id }, data });
+  res.json({
+    id: updated.id,
+    email: updated.email,
+    role: updated.role,
+    subscription_tier: updated.subscription_tier,
+    created_at: updated.created_at,
+    daily_chat_count: updated.daily_chat_count,
+    daily_report_count: updated.daily_report_count,
+  });
+});
+
 app.get('/api/admin/stats', authRequired, adminRequired, async (_req, res) => {
   const [userCount, postCount, chatCount, todayChats] = await Promise.all([
     prisma.user.count(),
