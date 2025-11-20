@@ -220,7 +220,7 @@ export default function CreatePost() {
                 <p className="text-sm text-gray-600 mb-3">你还没有创建自定义角色</p>
                 <Button
                   size="sm"
-                  className="bg-teal-500 hover:bg-teal-600 rounded-full flex items-center justify-center"
+                  className="bg-teal-500 hover:bg-teal-600 rounded-full flex items-center justify-center mx-auto"
                   onClick={() => navigate(createPageUrl('CreateStyle'))}
                 >
                   创建角色

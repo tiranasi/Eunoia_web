@@ -113,7 +113,7 @@ export default function CreateStyle() {
               </h1>
             </div>
             <Button
-              className="bg-teal-500 hover:bg-teal-600 rounded-full px-6"
+              className="bg-teal-500 hover:bg-teal-600 rounded-full px-6 inline-flex items-center justify-center"
               onClick={handleSubmit}
               disabled={saving}
             >
@@ -174,7 +174,7 @@ export default function CreateStyle() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className="absolute bottom-0 right-0 rounded-full"
+                    className="absolute bottom-0 right-0 rounded-full inline-flex items-center justify-center"
                     onClick={() => document.getElementById('avatar-upload')?.click()}
                   >
                     更换
