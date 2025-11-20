@@ -598,7 +598,7 @@ export default function EunoiaChat() {
         return (
           <div
             className="flex-1 min-h-0 overflow-y-auto px-4 pb-4"
-            style={{ paddingBottom: `${bottomPaddingPx}px` }}
+            style={{ paddingBottom: `${bottomPaddingPx}px`, paddingTop: '104px', scrollPaddingTop: '104px' }}
           >
         
         <div className="max-w-lg mx-auto">
