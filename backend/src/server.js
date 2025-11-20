@@ -52,6 +52,7 @@ function toFrontend(entity, item) {
       x.tags = parseJsonSafe(item.tagsJson, []);
       x.liked_by = parseJsonSafe(item.likedByJson, []);
       x.shared_style_data = normalizeSharedStyleData(parseJsonSafe(item.sharedStyleDataJson, null));
+       x.admin_hidden = !!item.admin_hidden;
       delete x.tagsJson; delete x.likedByJson; delete x.sharedStyleDataJson;
       break;
     case 'EmotionReport':
@@ -102,6 +103,7 @@ function fromFrontend(entity, data) {
         d.shared_style_id = Number.isFinite(n) ? n : null;
       }
       delete d.tags; delete d.liked_by; delete d.shared_style_data;
+      if (d.admin_hidden !== undefined) d.admin_hidden = !!d.admin_hidden;
       break;
     case 'Notification':
       // Ensure numeric post_id is properly typed
@@ -145,20 +147,49 @@ function authRequired(req, res, next) {
   if (!m) return res.status(401).send('Unauthorized');
   try {
     const payload = jwt.verify(m[1], JWT_SECRET);
-    req.user = { id: payload.sub, email: payload.email };
+    req.user = { id: payload.sub, email: payload.email, role: payload.role || 'user' };
     next();
   } catch {
     return res.status(401).send('Unauthorized');
   }
 }
 
+function adminRequired(req, res, next) {
+  if (!req.user || req.user.role !== 'admin') return res.status(403).send('Forbidden');
+  next();
+}
+
+async function ensureAdminUser() {
+  const existing = await prisma.user.findUnique({ where: { email: ADMIN_EMAIL } });
+  const hash = await bcrypt.hash(ADMIN_PASSWORD, 10);
+  if (!existing) {
+    await prisma.user.create({
+      data: {
+        email: ADMIN_EMAIL,
+        password_hash: hash,
+        role: 'admin',
+        subscription_tier: 'plus',
+      },
+    });
+    return;
+  }
+  // Ensure role/password are correct and unique
+  if (existing.role !== 'admin' || !(await bcrypt.compare(ADMIN_PASSWORD, existing.password_hash || ''))) {
+    await prisma.user.update({
+      where: { email: ADMIN_EMAIL },
+      data: { role: 'admin', password_hash: hash, subscription_tier: 'plus' },
+    });
+  }
+}
+
 app.post('/api/auth/register', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) return res.status(400).send('Missing email or password');
+  if (email === ADMIN_EMAIL) return res.status(403).send('Cannot register admin');
   const exist = await prisma.user.findUnique({ where: { email } });
   if (exist) return res.status(409).send('Email already registered');
   const hash = await bcrypt.hash(password, 10);
-  const user = await prisma.user.create({ data: { email, password_hash: hash, subscription_tier: 'free' } });
+  const user = await prisma.user.create({ data: { email, password_hash: hash, subscription_tier: 'free', role: 'user' } });
   res.json({ id: user.id, email: user.email });
 });
 
@@ -169,14 +200,16 @@ app.post('/api/auth/login', async (req, res) => {
   if (!user || !user.password_hash) return res.status(401).send('Invalid credentials');
   const ok = await bcrypt.compare(password, user.password_hash);
   if (!ok) return res.status(401).send('Invalid credentials');
-  const token = jwt.sign({ sub: user.id, email: user.email }, JWT_SECRET, { expiresIn: '7d' });
-  res.json({ token });
+  const role = user.role || (user.email === ADMIN_EMAIL ? 'admin' : 'user');
+  const token = jwt.sign({ sub: user.id, email: user.email, role }, JWT_SECRET, { expiresIn: '7d' });
+  res.json({ token, role });
 });
 
 app.get('/api/me', authRequired, async (req, res) => {
   const user = await prisma.user.findUnique({ where: { id: req.user.id } });
   if (!user) return res.status(404).send('User not found');
-  res.json({ ...user, avatar_url: normalizeUploadUrl(user.avatar_url) });
+  const role = user.role || (user.email === ADMIN_EMAIL ? 'admin' : 'user');
+  res.json({ ...user, role, avatar_url: normalizeUploadUrl(user.avatar_url) });
 });
 
 app.put('/api/me', authRequired, async (req, res) => {
@@ -220,10 +253,12 @@ app.get('/api/entities/:entity', authRequired, async (req, res) => {
   }
   const validLimit = limit && limit !== 'undefined' && limit !== 'null' && limit !== '' ? Number(limit) : undefined;
   const where = {};
-  if (['favorite','chatHistory','chatStyle','emotionReport','trendAnalysis'].includes(model)) {
-    where.created_by = req.user.email;
-  } else if (model === 'notification') {
-    where.recipient_email = req.user.email;
+  if (req.user.role !== 'admin') {
+    if (['favorite','chatHistory','chatStyle','emotionReport','trendAnalysis'].includes(model)) {
+      where.created_by = req.user.email;
+    } else if (model === 'notification') {
+      where.recipient_email = req.user.email;
+    }
   }
   const items = await prisma[model].findMany({
     where,
@@ -302,6 +337,94 @@ app.get('/api/entities/ChatStyle/:id', authRequired, async (req, res) => {
     is_accessible: style.created_by === (req.user?.email || ''),
   };
   return res.json(status);
+});
+
+// Admin routes
+function parseOrder(validOrder) {
+  if (!validOrder) return undefined;
+  const desc = validOrder.startsWith('-');
+  const field = desc ? validOrder.slice(1) : validOrder;
+  return { [field]: desc ? 'desc' : 'asc' };
+}
+
+app.get('/api/admin/posts', authRequired, adminRequired, async (req, res) => {
+  const { order, limit } = req.query;
+  const orderBy = parseOrder(order && order !== 'undefined' && order !== 'null' && order !== '' ? order : undefined);
+  const validLimit = limit && limit !== 'undefined' && limit !== 'null' && limit !== '' ? Number(limit) : undefined;
+  const items = await prisma.post.findMany({
+    orderBy,
+    take: Number.isFinite(validLimit) ? validLimit : undefined,
+  });
+  res.json(items.map((it) => toFrontend('Post', it)));
+});
+
+app.put('/api/admin/posts/:id', authRequired, adminRequired, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).send('Invalid id');
+  const payload = fromFrontend('Post', req.body);
+  const updated = await prisma.post.update({ where: { id }, data: payload });
+  res.json(toFrontend('Post', updated));
+});
+
+app.get('/api/admin/chat-styles', authRequired, adminRequired, async (req, res) => {
+  const { order, limit } = req.query;
+  const orderBy = parseOrder(order && order !== 'undefined' && order !== 'null' && order !== '' ? order : undefined);
+  const validLimit = limit && limit !== 'undefined' && limit !== 'null' && limit !== '' ? Number(limit) : undefined;
+  const items = await prisma.chatStyle.findMany({
+    orderBy,
+    take: Number.isFinite(validLimit) ? validLimit : undefined,
+  });
+  res.json(items.map((it) => toFrontend('ChatStyle', it)));
+});
+
+app.put('/api/admin/chat-styles/:id', authRequired, adminRequired, async (req, res) => {
+  const id = Number(req.params.id);
+  if (!Number.isFinite(id)) return res.status(400).send('Invalid id');
+  const data = fromFrontend('ChatStyle', req.body);
+  const updated = await prisma.chatStyle.update({ where: { id }, data });
+  res.json(toFrontend('ChatStyle', updated));
+});
+
+app.get('/api/admin/users', authRequired, adminRequired, async (req, res) => {
+  const { order, limit } = req.query;
+  const orderBy = parseOrder(order && order !== 'undefined' && order !== 'null' && order !== '' ? order : undefined);
+  const validLimit = limit && limit !== 'undefined' && limit !== 'null' && limit !== '' ? Number(limit) : undefined;
+  const users = await prisma.user.findMany({
+    orderBy,
+    take: Number.isFinite(validLimit) ? validLimit : undefined,
+    select: {
+      id: true,
+      email: true,
+      role: true,
+      subscription_tier: true,
+      created_at: true,
+      daily_chat_count: true,
+      daily_report_count: true,
+    },
+  });
+  res.json(users);
+});
+
+app.get('/api/admin/stats', authRequired, adminRequired, async (_req, res) => {
+  const [userCount, postCount, chatCount, todayChats] = await Promise.all([
+    prisma.user.count(),
+    prisma.post.count(),
+    prisma.chatHistory.count(),
+    prisma.chatHistory.aggregate({
+      _count: { id: true },
+      where: {
+        last_message_at: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0)),
+        },
+      },
+    }),
+  ]);
+  res.json({
+    user_count: userCount,
+    post_count: postCount,
+    chat_history_count: chatCount,
+    today_chat_histories: todayChats?._count?.id ?? 0,
+  });
 });
 
 // LLM stub
@@ -397,6 +520,13 @@ app.post('/api/integrations/core/uploadFile', authRequired, upload.single('file'
 });
 
 const PORT = process.env.PORT || 3001;
-app.listen(PORT, '127.0.0.1', () => {
-  console.log(`API server on http://127.0.0.1:${PORT}`);
-});
+ensureAdminUser()
+  .catch((err) => console.error('Admin bootstrap failed:', err))
+  .finally(() => {
+    app.listen(PORT, '127.0.0.1', () => {
+      console.log(`API server on http://127.0.0.1:${PORT}`);
+    });
+  });
+// Admin bootstrap (single admin)
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@eunoia.local';
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Eunoia100390';
