@@ -520,11 +520,11 @@ export default function EunoiaChat() {
   return (
     <div className="h-screen flex flex-col bg-gradient-to-b from-teal-50/30 to-white">
       {/* Header */}
-      <div className="bg-white border-b border-gray-100 px-4 pt-safe pb-3 flex items-center justify-between flex-shrink-0">
+      <div className="bg-white border-b border-gray-100 px-4 pt-safe pb-3 flex items-center justify-between flex-shrink-0 sticky top-0 z-30">
         <div className="flex items-center gap-3">
           <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full flex items-center justify-center">
                 <Menu className="w-5 h-5" strokeWidth={1.5} />
               </Button>
             </SheetTrigger>
@@ -558,7 +558,7 @@ export default function EunoiaChat() {
                       <Button
                         variant="ghost"
                         size="icon"
-                        className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0"
+                        className="opacity-0 group-hover:opacity-100 transition-opacity flex-shrink-0 flex items-center justify-center"
                         onClick={(e) => handleDeleteChat(chat.id, e)}
                       >
                         <Trash2 className="w-4 h-4 text-red-500" strokeWidth={1.5} />
@@ -579,7 +579,7 @@ export default function EunoiaChat() {
         <Button
           variant="ghost"
           size="icon"
-          className="rounded-full"
+          className="rounded-full flex items-center justify-center"
           onClick={handleNewChat}
         >
           <Plus className="w-5 h-5" strokeWidth={1.5} />
@@ -673,7 +673,7 @@ export default function EunoiaChat() {
             <Button 
               variant="ghost" 
               size="icon"
-              className="rounded-full flex-shrink-0"
+              className="rounded-full flex-shrink-0 flex items-center justify-center"
             >
               <Paperclip className="w-5 h-5 text-gray-500" strokeWidth={1.5} />
             </Button>
@@ -691,7 +691,7 @@ export default function EunoiaChat() {
             
             <Button 
               size="icon"
-              className="rounded-full bg-teal-500 hover:bg-teal-600 flex-shrink-0"
+              className="rounded-full bg-teal-500 hover:bg-teal-600 flex-shrink-0 flex items-center justify-center"
               onClick={handleSend}
               disabled={!inputValue.trim() || isAiTyping}
             >

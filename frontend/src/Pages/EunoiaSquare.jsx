@@ -114,7 +114,7 @@ export default function EunoiaSquare() {
         <div className="max-w-lg mx-auto px-4 pt-safe pb-3">
           <div className="flex items-center justify-between mb-4 pt-4">
             <h1 className="text-2xl font-bold text-gray-900">广场</h1>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full flex items-center justify-center">
               <SlidersHorizontal className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
             </Button>
           </div>
@@ -203,7 +203,7 @@ export default function EunoiaSquare() {
       {/* FAB */}
       <Button 
         size="icon"
-        className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-teal-500 hover:bg-teal-600 shadow-lg z-40"
+        className="fixed bottom-24 right-6 w-14 h-14 rounded-full bg-teal-500 hover:bg-teal-600 shadow-lg z-40 flex items-center justify-center"
         onClick={() => navigate(createPageUrl('CreatePost'))}
       >
         <Plus className="w-6 h-6" strokeWidth={2} />

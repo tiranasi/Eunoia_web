@@ -145,7 +145,7 @@ export default function EmotionReports() {
                 {!isPlusUser && (
                   <Badge variant="outline" className="text-xs">今日 {currentReportCount}/1</Badge>
                 )}
-                <Button size="icon" className="rounded-full bg-purple-600 hover:bg-purple-700" onClick={handleCreateReport}>
+                <Button size="icon" className="rounded-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center" onClick={handleCreateReport}>
                   <Plus className="w-5 h-5" strokeWidth={2} />
                 </Button>
               </div>
@@ -217,7 +217,7 @@ export default function EmotionReports() {
                 </div>
                 <h3 className="text-base font-semibold text-gray-900 mb-2">暂无分析报告</h3>
                 <p className="text-sm text-gray-500 mb-6">开始您的第一次情绪分析吧</p>
-                <Button className="bg-purple-600 hover:bg-purple-700 rounded-full px-6" onClick={handleCreateReport}>
+                <Button className="bg-purple-600 hover:bg-purple-700 rounded-full px-6 inline-flex items-center justify-center" onClick={handleCreateReport}>
                   <Plus className="w-5 h-5 mr-2" strokeWidth={2} />创建分析
                 </Button>
               </div>
@@ -229,7 +229,7 @@ export default function EmotionReports() {
             {isPlusUser ? (
               trendAnalyses.length > 0 ? (
                 <div className="space-y-3">
-                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-2xl h-12 font-medium mb-4" onClick={handleTrendAnalysisClick}>
+                  <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-2xl h-12 font-medium mb-4 inline-flex items-center justify-center" onClick={handleTrendAnalysisClick}>
                     <Plus className="w-5 h-5 mr-2" strokeWidth={2} />创建趋势分析
                   </Button>
                   {trendAnalyses.map((trend) => {
@@ -274,7 +274,7 @@ export default function EmotionReports() {
                   </div>
                   <h3 className="text-base font-semibold text-gray-900 mb-2">暂无趋势分析</h3>
                   <p className="text-sm text-gray-500 mb-6">至少需要 5 份报告才能创建趋势分析</p>
-                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-full px-6" onClick={handleTrendAnalysisClick} disabled={reports.filter((r) => r.status === 'completed').length < 5}>
+                  <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-full px-6 inline-flex items-center justify-center" onClick={handleTrendAnalysisClick} disabled={reports.filter((r) => r.status === 'completed').length < 5}>
                     <Plus className="w-5 h-5 mr-2" strokeWidth={2} />创建趋势分析
                   </Button>
                 </div>
@@ -287,7 +287,7 @@ export default function EmotionReports() {
                   </div>
                   <h3 className="text-lg font-bold text-gray-900 mb-2">解锁趋势分析</h3>
                   <p className="text-sm text-gray-700 mb-4">自动汇总最近 5 份报告并给出建议</p>
-                  <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full px-8 h-11 font-semibold" onClick={() => navigate(createPageUrl('PlusSubscription'))}>
+                  <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full px-8 h-11 font-semibold inline-flex items-center justify-center" onClick={() => navigate(createPageUrl('PlusSubscription'))}>
                     开通 Plus
                   </Button>
                 </div>

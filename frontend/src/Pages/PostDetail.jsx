@@ -270,13 +270,13 @@ export default function PostDetail() {
             <Button 
               variant="ghost" 
               size="icon"
-              className="rounded-full"
+              className="rounded-full flex items-center justify-center"
               onClick={() => navigate(-1)}
             >
               <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
             </Button>
             <h1 className="text-lg font-bold text-gray-900">帖子详情</h1>
-            <Button variant="ghost" size="icon" className="rounded-full">
+            <Button variant="ghost" size="icon" className="rounded-full flex items-center justify-center">
               <MoreVertical className="w-5 h-5" strokeWidth={1.5} />
             </Button>
           </div>
@@ -355,7 +355,7 @@ export default function PostDetail() {
                     </div>
                     {post.shared_style_data.author_email !== user?.email && (
                       <Button
-                        className="w-full bg-teal-500 hover:bg-teal-600 text-white rounded-2xl h-10 font-medium"
+                        className="w-full bg-teal-500 hover:bg-teal-600 text-white rounded-2xl h-10 font-medium flex items-center justify-center"
                         onClick={handleImportStyle}
                         disabled={importing}
                       >
@@ -448,7 +448,7 @@ export default function PostDetail() {
               />
               <Button
                 size="icon"
-                className="rounded-full bg-teal-500 hover:bg-teal-600 flex-shrink-0 h-10 w-10"
+                className="rounded-full bg-teal-500 hover:bg-teal-600 flex-shrink-0 h-10 w-10 flex items-center justify-center"
                 onClick={handleComment}
                 disabled={!commentText.trim()}
               >

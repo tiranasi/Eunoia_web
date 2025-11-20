@@ -146,7 +146,7 @@ export default function CreatePost() {
               <h1 className="text-xl font-bold text-gray-900">发布帖子</h1>
             </div>
             <Button
-              className="bg-teal-500 hover:bg-teal-600 rounded-full px-6"
+              className="bg-teal-500 hover:bg-teal-600 rounded-full px-6 flex items-center justify-center"
               onClick={handlePublish}
               disabled={publishing}
             >
@@ -220,7 +220,7 @@ export default function CreatePost() {
                 <p className="text-sm text-gray-600 mb-3">你还没有创建自定义角色</p>
                 <Button
                   size="sm"
-                  className="bg-teal-500 hover:bg-teal-600 rounded-full"
+                  className="bg-teal-500 hover:bg-teal-600 rounded-full flex items-center justify-center"
                   onClick={() => navigate(createPageUrl('CreateStyle'))}
                 >
                   创建角色

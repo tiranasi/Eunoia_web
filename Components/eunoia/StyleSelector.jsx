@@ -125,7 +125,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
       <SheetTrigger asChild>
         <Button 
           variant="outline" 
-          className="rounded-full border-gray-200 bg-white shadow-sm hover:shadow-md transition-all px-4 py-2 h-auto"
+          className="rounded-full border-gray-200 bg-white shadow-sm hover:shadow-md transition-all px-4 py-2 h-auto inline-flex items-center justify-center"
         >
           <span className="text-sm font-medium text-gray-900">{currentStyle}</span>
           <ChevronDown className="w-4 h-4 ml-2 text-gray-500" strokeWidth={1.5} />
@@ -140,7 +140,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
         <div className="space-y-6">
           {/* System Styles */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">系统风格</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center justify-center">系统风格</h3>
             <div className="space-y-2">
               {systemStyles.map(style => (
                 <Card 
@@ -306,7 +306,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
           {/* Create Button */}
           <div>
             <Button 
-              className="w-full bg-teal-500 hover:bg-teal-600 text-white rounded-2xl h-12 font-medium shadow-sm disabled:opacity-50"
+              className="w-full bg-teal-500 hover:bg-teal-600 text-white rounded-2xl h-12 font-medium shadow-sm disabled:opacity-50 flex items-center justify-center"
               onClick={handleCreateStyle}
               disabled={totalStyles >= maxStyles}
             >

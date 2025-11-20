@@ -164,7 +164,7 @@ export default function EunoiaHome() {
             </div>
 
             <Button
-              className="w-full bg-white/20 hover:bg-white/30 text-white border-0 rounded-2xl h-10"
+              className="w-full bg-white/20 hover:bg-white/30 text-white border-0 rounded-2xl h-10 flex items-center justify-center"
               onClick={generateDailyQuote}
               disabled={loadingQuote}
             >

@@ -113,7 +113,7 @@ export default function EunoiaMe() {
               <Button 
                 variant="ghost" 
                 size="icon" 
-                className="rounded-full relative"
+                className="rounded-full relative flex items-center justify-center"
                 onClick={() => navigate(createPageUrl('Notifications'))}
               >
                 <Bell className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
@@ -121,7 +121,7 @@ export default function EunoiaMe() {
                   <span className="absolute top-2 right-2 w-2 h-2 bg-pink-500 rounded-full" />
                 )}
               </Button>
-              <Button variant="ghost" size="icon" className="rounded-full">
+              <Button variant="ghost" size="icon" className="rounded-full flex items-center justify-center">
                 <Settings className="w-5 h-5 text-gray-600" strokeWidth={1.5} />
               </Button>
             </div>
@@ -267,7 +267,7 @@ export default function EunoiaMe() {
         <div className="py-6 pb-8">
           <Button 
             variant="outline"
-            className="w-full rounded-2xl h-12 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-medium"
+            className="w-full rounded-2xl h-12 border-red-200 text-red-600 hover:bg-red-50 hover:text-red-700 font-medium inline-flex items-center justify-center"
             onClick={() => { try { localStorage.removeItem('token'); } catch(_){}; navigate(createPageUrl('Login')); }}
           >
             <LogOut className="w-5 h-5 mr-2" strokeWidth={1.5} />

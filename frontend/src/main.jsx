@@ -1,6 +1,6 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@/index.css';
 
@@ -33,8 +33,19 @@ import Drafts from '@/Pages/Drafts';
 const qc = new QueryClient();
 
 function RequireAuth({ children }) {
-  const token = (() => { try { return localStorage.getItem('token'); } catch { return null; } })();
-  if (!token) return <Login />;
+  const location = useLocation();
+  const token = (() => {
+    try {
+      return localStorage.getItem('token');
+    } catch {
+      return null;
+    }
+  })();
+
+  if (!token) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
   return children;
 }
 
