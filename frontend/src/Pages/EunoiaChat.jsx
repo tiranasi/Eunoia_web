@@ -349,7 +349,7 @@ export default function EunoiaChat() {
     
     // 添加风格切换提示消息 / 更新首条问候
     const nextGreeting = getInitialGreeting(styleName);
-    if (messages.length > 0 && messages[0]?.isFirst && !messages[0].isUser) {
+    if (messages.length <= 1 && messages[0]?.isFirst && !messages[0].isUser) {
       const refreshed = messages.map((msg, idx) =>
         idx === 0 ? { ...msg, text: nextGreeting, aiAvatar: newAvatar, styleName } : msg
       );
