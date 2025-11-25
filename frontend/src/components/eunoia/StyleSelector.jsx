@@ -16,16 +16,19 @@ import { Badge } from '@/components/ui/badge'; // Added Badge import
 import { base44 } from '@/api/base44Client';
 import { isRenderableImage } from '@/utils/image';
 import { useQuery } from '@tanstack/react-query';
-
-const systemStyles = [
-  { id: 'warm', name: '暖心陪伴', description: '温暖体贴，善解人意', icon: '🤗', isSystem: true },
-  { id: 'spark', name: '灵感火花', description: '创意满满，富有启发', icon: '💡', isSystem: true },
-  { id: 'cool', name: '冷静分析', description: '理性客观，逻辑清晰', icon: '🧠', isSystem: true },
-];
+import { useTranslation } from '@/i18n';
 
 export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleChange }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  // 系统风格（多语言）
+  const systemStyles = [
+    { id: 'warm', name: t('styleSelector.styles.warm.name'), description: t('styleSelector.styles.warm.desc'), icon: '🤗', isSystem: true },
+    { id: 'spark', name: t('styleSelector.styles.spark.name'), description: t('styleSelector.styles.spark.desc'), icon: '💡', isSystem: true },
+    { id: 'cool', name: t('styleSelector.styles.cool.name'), description: t('styleSelector.styles.cool.desc'), icon: '🧠', isSystem: true },
+  ];
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -139,13 +142,13 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
       
       <SheetContent side="bottom" className="rounded-t-3xl border-0 max-h-[85vh] overflow-auto pb-32 z-50">
         <SheetHeader className="mb-6">
-          <SheetTitle className="text-lg font-semibold">选择对话风格</SheetTitle>
+          <SheetTitle className="text-lg font-semibold">{t('styleSelector.title')}</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-6">
           {/* System Styles */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3">系统风格</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('styleSelector.sections.system')}</h3>
             <div className="space-y-2">
               {systemStyles.map(style => (
                 <Card 
@@ -180,7 +183,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
           {/* My Styles */}
           {myOwnStyles.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">我的风格</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('styleSelector.sections.mine')}</h3>
               <div className="grid grid-cols-2 gap-3">
                 {myOwnStyles.map(style => (
                   <Card 
@@ -203,16 +206,16 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => navigate(createPageUrl('CreateStyle') + '?id=' + style.id)}>
-                            编辑
+                            {t('styleSelector.actions.edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleSetDefault(style.id)}>
-                            设为默认
+                            {t('styleSelector.actions.setDefault')}
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className="text-red-600"
                             onClick={() => handleDelete(style.id)}
                           >
-                            删除
+                            {t('styleSelector.actions.delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -240,7 +243,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
           {/* Imported Styles */}
           {importedStyles.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">导入的风格</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('styleSelector.sections.imported')}</h3>
               <div className="grid grid-cols-2 gap-3">
                 {importedStyles.map(style => {
                   const status = originalStylesStatus[style.id] || { exists: true, is_deleted_by_author: false };
@@ -278,7 +281,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
                               className="text-red-600"
                               onClick={() => handleDelete(style.id)}
                             >
-                              删除
+                              {t('styleSelector.actions.delete')}
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -296,15 +299,15 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
                           </div>
                         )}
                         <p className="text-sm font-medium text-gray-900 mb-0.5">{style.name}</p>
-                        <p className="text-xs text-gray-500">by {style.original_author_name}</p>
+                        <p className="text-xs text-gray-500">{t('styleSelector.by', { name: style.original_author_name })}</p>
                         {isHardDeleted && (
                           <Badge className="mt-1 bg-red-100 text-red-700 text-xs">
-                            作者已删除
+                            {t('styleSelector.actions.deletedByAuthor')}
                           </Badge>
                         )}
                         {!isHardDeleted && isOriginalMissing && (
                           <Badge className="mt-1 bg-amber-100 text-amber-700 text-xs">
-                            原作者未公开或已变更
+                            {t('styleSelector.badges.originalUnavailable')}
                           </Badge>
                         )}
                       </div>
@@ -323,12 +326,12 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
               disabled={totalStyles >= maxStyles}
             >
               <Plus className="w-5 h-5 mr-2" strokeWidth={2} />
-              创建自定义风格
-              <span className="ml-2 text-xs opacity-80">({totalStyles}/{maxStyles})</span>
+              {t('styleSelector.createButton')}
+              <span className="ml-2 text-xs opacity-80">{t('styleSelector.counter', { total: totalStyles, max: maxStyles })}</span>
             </Button>
             {!isPlusUser && totalStyles >= maxStyles && (
               <p className="text-xs text-center text-amber-600 mt-2">
-                已达上限。
+                {t('styleSelector.limitReached')}
                 <button 
                   className="underline ml-1"
                   onClick={() => {
@@ -336,7 +339,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
                     navigate(createPageUrl('PlusSubscription'));
                   }}
                 >
-                  升级Plus可创建20个风格
+                  {t('styleSelector.upgradePlus')}
                 </button>
               </p>
             )}

@@ -2,16 +2,18 @@ import React from 'react';
 import { Home, MessageCircle, Grid3x3, User } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { useTranslation } from '@/i18n';
 
 const navItems = [
-  { id: 'home', label: 'Home', icon: Home, page: 'EunoiaHome' },
-  { id: 'chat', label: 'Chat', icon: MessageCircle, page: 'EunoiaChat' },
-  { id: 'square', label: 'Square', icon: Grid3x3, page: 'EunoiaSquare' },
-  { id: 'me', label: 'Me', icon: User, page: 'EunoiaMe' },
+  { id: 'home', labelKey: 'nav.home', icon: Home, page: 'EunoiaHome' },
+  { id: 'chat', labelKey: 'nav.chat', icon: MessageCircle, page: 'EunoiaChat' },
+  { id: 'square', labelKey: 'nav.square', icon: Grid3x3, page: 'EunoiaSquare' },
+  { id: 'me', labelKey: 'nav.me', icon: User, page: 'EunoiaMe' },
 ];
 
 export default function BottomNav() {
   const location = useLocation();
+  const { t } = useTranslation();
 
   const isActive = (page) => {
     return location.pathname === createPageUrl(page);
@@ -34,7 +36,7 @@ export default function BottomNav() {
                 }`}
               >
                 <Icon className="w-5 h-5" strokeWidth={1.5} />
-                <span className="text-xs font-medium">{item.label}</span>
+                <span className="text-xs font-medium">{t(item.labelKey)}</span>
               </Link>
             );
           })}

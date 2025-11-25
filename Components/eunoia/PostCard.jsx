@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Bookmark } from 'lucide-react';
 import { format } from 'date-fns';
 import CategoryBadge from './CategoryBadge';
+import { useTranslation } from '@/i18n';
 
 export default function PostCard({ post, authorProfile, createdAt, compact = false, onClick }) {
   const type = post.type;
@@ -15,6 +16,10 @@ export default function PostCard({ post, authorProfile, createdAt, compact = fal
   const createdBy = post.created_by;
   const displayName = (authorProfile?.nickname || '').trim();
   const avatarUrl = authorProfile?.avatar_url;
+  const { t } = useTranslation();
+  const anonymousName = t('postCard.anonymous');
+  const shownName = displayName || anonymousName;
+  const avatarInitial = (shownName[0] || '').toUpperCase();
 
   return (
     <Card 
@@ -38,15 +43,15 @@ export default function PostCard({ post, authorProfile, createdAt, compact = fal
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
               {avatarUrl?.startsWith('http') ? (
-                <img src={avatarUrl} alt="作者头像" className="w-full h-full object-cover" />
+                <img src={avatarUrl} alt={t('postCard.authorAvatarAlt')} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-sm font-semibold">
-                {(displayName || '匿名')[0]?.toUpperCase()}
+                {avatarInitial}
                 </div>
               )}
             </div>
             <div className="min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{displayName || '匿名'}</p>
+            <p className="text-sm font-semibold text-gray-900 truncate">{shownName}</p>
             </div>
           </div>
           {createdAt && (
@@ -57,7 +62,7 @@ export default function PostCard({ post, authorProfile, createdAt, compact = fal
           <div className="flex items-start justify-between mb-2">
             <div className="flex-1">
               {type === 'dialogue' && (
-                <p className="text-xs text-gray-500 mb-1">Warm Companion • Comfort Scene</p>
+                <p className="text-xs text-gray-500 mb-1">{t('postCard.dialogueLabel')}</p>
               )}
             </div>
             <CategoryBadge category={category} size="xs" />

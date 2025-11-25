@@ -6,6 +6,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/co
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChevronDown, Plus, MoreVertical, Check } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,14 +18,27 @@ import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 
 const systemStyles = [
-  { id: 'warm', name: '暖心陪伴', description: '温暖体贴，善解人意', icon: '🤗', isSystem: true },
-  { id: 'spark', name: '灵感火花', description: '创意满满，富有启发', icon: '💡', isSystem: true },
-  { id: 'cool', name: '冷静分析', description: '理性客观，逻辑清晰', icon: '🧠', isSystem: true },
+  { id: 'warm', fallbackName: '暖心陪伴', nameKey: 'styleSelector.styles.warm.name', descKey: 'styleSelector.styles.warm.desc', icon: '🤗', isSystem: true },
+  { id: 'spark', fallbackName: '灵感火花', nameKey: 'styleSelector.styles.spark.name', descKey: 'styleSelector.styles.spark.desc', icon: '💡', isSystem: true },
+  { id: 'cool', fallbackName: '冷静分析', nameKey: 'styleSelector.styles.cool.name', descKey: 'styleSelector.styles.cool.desc', icon: '🧠', isSystem: true },
 ];
 
 export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleChange }) {
   const [open, setOpen] = useState(false);
   const navigate = useNavigate();
+  const { t } = useTranslation();
+
+  const getSystemLabel = (style) => t(style.nameKey);
+  const getSystemDesc = (style) => t(style.descKey);
+  const isSystemSelected = (style) => {
+    const label = getSystemLabel(style);
+    return [style.id, style.fallbackName, label].includes(currentStyle);
+  };
+  const displayCurrentStyle = (() => {
+    const matched = systemStyles.find(style => isSystemSelected(style));
+    if (matched) return getSystemLabel(matched);
+    return currentStyle || getSystemLabel(systemStyles[0]);
+  })();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -127,55 +141,61 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
           variant="outline" 
           className="rounded-full border-gray-200 bg-white shadow-sm hover:shadow-md transition-all px-4 py-2 h-auto inline-flex items-center justify-center gap-2 whitespace-nowrap leading-none"
         >
-          <span className="text-sm font-medium text-gray-900">{currentStyle}</span>
+          <span className="text-sm font-medium text-gray-900">{displayCurrentStyle}</span>
           <ChevronDown className="w-4 h-4 ml-2 text-gray-500" strokeWidth={1.5} />
         </Button>
       </SheetTrigger>
       
       <SheetContent side="bottom" className="rounded-t-3xl border-0 max-h-[85vh] overflow-auto pb-32">
         <SheetHeader className="mb-6">
-          <SheetTitle className="text-lg font-semibold">选择对话风格</SheetTitle>
+          <SheetTitle className="text-lg font-semibold">{t('styleSelector.title')}</SheetTitle>
         </SheetHeader>
 
         <div className="space-y-6">
           {/* System Styles */}
           <div>
-            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center justify-center">系统风格</h3>
+            <h3 className="text-sm font-semibold text-gray-700 mb-3 flex items-center justify-center">{t('styleSelector.sections.system')}</h3>
             <div className="space-y-2">
-              {systemStyles.map(style => (
-                <Card 
-                  key={style.id}
-                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
-                    currentStyle === style.name 
-                      ? 'border-teal-500 bg-teal-50' 
-                      : 'border-gray-100 hover:border-gray-200'
-                  }`}
-                  onClick={() => {
-                    onStyleChange?.(style.name);
-                    setOpen(false);
-                  }}
-                >
-                  <div className="flex items-center gap-3">
-                    <span className="text-2xl">{style.icon}</span>
-                    <div className="flex-1">
-                      <p className="font-semibold text-gray-900 text-sm">{style.name}</p>
-                      <p className="text-xs text-gray-500">{style.description}</p>
-                    </div>
-                    {currentStyle === style.name && (
-                      <div className="w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-white" strokeWidth={3} />
+              {systemStyles.map(style => {
+                const label = getSystemLabel(style);
+                const desc = getSystemDesc(style);
+                const isActive = isSystemSelected(style);
+
+                return (
+                  <Card 
+                    key={style.id}
+                    className={`p-4 rounded-2xl border-2 cursor-pointer transition-all ${
+                      isActive 
+                        ? 'border-teal-500 bg-teal-50' 
+                        : 'border-gray-100 hover:border-gray-200'
+                    }`}
+                    onClick={() => {
+                      onStyleChange?.(label);
+                      setOpen(false);
+                    }}
+                  >
+                    <div className="flex items-center gap-3">
+                      <span className="text-2xl">{style.icon}</span>
+                      <div className="flex-1">
+                        <p className="font-semibold text-gray-900 text-sm">{label}</p>
+                        <p className="text-xs text-gray-500">{desc}</p>
                       </div>
-                    )}
-                  </div>
-                </Card>
-              ))}
+                      {isActive && (
+                        <div className="w-5 h-5 rounded-full bg-teal-500 flex items-center justify-center">
+                          <Check className="w-3 h-3 text-white" strokeWidth={3} />
+                        </div>
+                      )}
+                    </div>
+                  </Card>
+                );
+              })}
             </div>
           </div>
 
           {/* My Styles */}
           {myOwnStyles.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">我的风格</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('styleSelector.sections.mine')}</h3>
               <div className="grid grid-cols-2 gap-3">
                 {myOwnStyles.map(style => (
                   <Card 
@@ -198,16 +218,16 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => navigate(createPageUrl('CreateStyle') + '?id=' + style.id)}>
-                            编辑
+                            {t('styleSelector.actions.edit')}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={() => handleSetDefault(style.id)}>
-                            设为默认
+                            {t('styleSelector.actions.setDefault')}
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className="text-red-600"
                             onClick={() => handleDelete(style.id)}
                           >
-                            删除
+                            {t('styleSelector.actions.delete')}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -221,7 +241,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
                         />
                       ) : (
                         <div className="w-12 h-12 mx-auto mb-2 text-2xl flex items-center justify-center bg-gray-50 rounded-full">
-                          {style.avatar || '😊'}
+                          {style.avatar || '?'}
                         </div>
                       )}
                       <p className="text-sm font-medium text-gray-900">{style.name}</p>
@@ -235,7 +255,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
           {/* Imported Styles */}
           {importedStyles.length > 0 && (
             <div>
-              <h3 className="text-sm font-semibold text-gray-700 mb-3">导入的风格</h3>
+              <h3 className="text-sm font-semibold text-gray-700 mb-3">{t('styleSelector.sections.imported')}</h3>
               <div className="grid grid-cols-2 gap-3">
                 {importedStyles.map(style => {
                   const isDeleted = style.is_deleted_by_author || originalStylesStatus[style.id] === false;
@@ -267,16 +287,16 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             {/* Only Delete option for imported styles */}
-                            <DropdownMenuItem 
-                              className="text-red-600"
-                              onClick={() => handleDelete(style.id)}
-                            >
-                              删除
-                            </DropdownMenuItem>
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                      <div className="text-center">
+                          <DropdownMenuItem 
+                            className="text-red-600"
+                            onClick={() => handleDelete(style.id)}
+                          >
+                            {t('styleSelector.actions.delete')}
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                    <div className="text-center">
                         {style.avatar?.startsWith('http') ? (
                           <img 
                             src={style.avatar} 
@@ -285,14 +305,14 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
                           />
                         ) : (
                           <div className="w-12 h-12 mx-auto mb-2 text-2xl flex items-center justify-center bg-gray-50 rounded-full">
-                            {style.avatar || '😊'}
+                            {style.avatar || '?'}
                           </div>
                         )}
                         <p className="text-sm font-medium text-gray-900 mb-0.5">{style.name}</p>
-                        <p className="text-xs text-gray-500">by {style.original_author_name}</p>
+                        <p className="text-xs text-gray-500">{t('styleSelector.by', { name: style.original_author_name })}</p>
                         {isDeleted && (
                           <Badge className="mt-1 bg-red-100 text-red-700 text-xs">
-                            作者已删除
+                            {t('styleSelector.actions.deletedByAuthor')}
                           </Badge>
                         )}
                       </div>
@@ -311,12 +331,12 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
               disabled={totalStyles >= maxStyles}
             >
               <Plus className="w-5 h-5 mr-2" strokeWidth={2} />
-              创建自定义风格
-              <span className="ml-2 text-xs opacity-80">({totalStyles}/{maxStyles})</span>
+              {t('styleSelector.createButton')}
+              <span className="ml-2 text-xs opacity-80">{t('styleSelector.counter', { total: totalStyles, max: maxStyles })}</span>
             </Button>
             {!isPlusUser && totalStyles >= maxStyles && (
               <p className="text-xs text-center text-amber-600 mt-2">
-                已达上限。
+                {t('styleSelector.limitReached')}
                 <button 
                   className="underline ml-1"
                   onClick={() => {
@@ -324,7 +344,7 @@ export default function StyleSelector({ currentStyle = '暖心陪伴', onStyleCh
                     navigate(createPageUrl('PlusSubscription'));
                   }}
                 >
-                  升级Plus可创建20个风格
+                  {t('styleSelector.upgradePlus')}
                 </button>
               </p>
             )}

@@ -1,6 +1,9 @@
 import React from 'react';
+import { useTranslation } from '@/i18n';
 
 export default function ChatBubble({ message, isUser, isFirst, userAvatar, userName, aiAvatar, styleName }) {
+  const { t } = useTranslation();
+
   return (
     <div className={`flex gap-2 ${isUser ? 'flex-row-reverse' : 'flex-row'} mb-4`}>
       {/* Avatar */}
@@ -10,7 +13,7 @@ export default function ChatBubble({ message, isUser, isFirst, userAvatar, userN
             {userAvatar?.startsWith('http') ? (
               <img src={userAvatar} alt="User" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-base">{userAvatar || '😊'}</span>
+              <span className="text-base">{userAvatar || '?'}</span>
             )}
           </div>
         ) : (
@@ -18,7 +21,7 @@ export default function ChatBubble({ message, isUser, isFirst, userAvatar, userN
             {aiAvatar?.startsWith('http') ? (
               <img src={aiAvatar} alt="AI" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-base">{aiAvatar || '🤗'}</span>
+              <span className="text-base">{aiAvatar || '?'}</span>
             )}
           </div>
         )}
@@ -27,7 +30,9 @@ export default function ChatBubble({ message, isUser, isFirst, userAvatar, userN
       {/* Message Content */}
       <div className={`max-w-[70%] ${isUser ? 'items-end' : 'items-start'} flex flex-col`}>
         {isFirst && !isUser && styleName && (
-          <p className="text-xs text-gray-500 mb-1 px-2">使用 <strong>{styleName}</strong></p>
+          <p className="text-xs text-gray-500 mb-1 px-2">
+            {t('chatBubble.usingStylePrefix')} <strong>{styleName}</strong>
+          </p>
         )}
         {isUser && userName && (
           <p className="text-xs text-gray-500 mb-1 px-2">{userName}</p>
