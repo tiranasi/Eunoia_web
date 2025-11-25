@@ -80,9 +80,10 @@ export default function EmotionAnalysis() {
 
       const languageName = t('language.current');
       const analysisPrompt = `你是专业的心理咨询师，请用${languageName}深入分析以下对话并输出情绪洞察。`;
+      const chatText = JSON.stringify(selectedChatData);
 
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `${analysisPrompt}\n\n请用 JSON 返回结果，字段包含 overall_assessment, emotional_trend, dominant_emotions[{label,value,description}], concerns[], suggestions[]，数值 0~1，勿输出多余文字。`,
+        prompt: `${analysisPrompt}\n\n对话数据：${chatText}\n\n请用 JSON 返回结果，字段包含 overall_assessment, emotional_trend, dominant_emotions[{label,value,description}], concerns[], suggestions[]，数值 0~1，勿输出多余文字。`,
         response_json_schema: {
           type: "object",
           properties: {
