@@ -7,11 +7,13 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from '@/i18n';
 
 export default function CourseDetail() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const courseId = searchParams.get('id');
+  const { t } = useTranslation();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -46,18 +48,18 @@ export default function CourseDetail() {
               >
                 <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
               </Button>
-              <h1 className="text-lg font-bold text-gray-900">课程详情（预览）</h1>
+              <h1 className="text-lg font-bold text-gray-900">{t('courseDetail.placeholderTitle')}</h1>
             </div>
           </div>
         </div>
         <div className="max-w-lg mx-auto px-4 py-12 text-center">
           <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
-            <span className="text-3xl">📚</span>
+            <span className="text-3xl">📘</span>
           </div>
-          <h3 className="text-base font-semibold text-gray-900 mb-2">课程建设中</h3>
-          <p className="text-sm text-gray-600 mb-6">当前课程暂无详细内容，已展示占位预览界面</p>
+          <h3 className="text-base font-semibold text-gray-900 mb-2">{t('courseDetail.placeholderTitle')}</h3>
+          <p className="text-sm text-gray-600 mb-6">{t('courseDetail.placeholderDesc')}</p>
           <Button className="rounded-full px-6 bg-blue-600 hover:bg-blue-700" onClick={() => navigate(createPageUrl('CourseCenter'))}>
-            返回课程中心
+            {t('courseDetail.back')}
           </Button>
         </div>
       </div>
@@ -66,7 +68,6 @@ export default function CourseDetail() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50/30 to-white pb-8">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center gap-3 pt-4">
@@ -78,31 +79,30 @@ export default function CourseDetail() {
             >
               <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
             </Button>
-            <h1 className="text-lg font-bold text-gray-900">课程详情</h1>
+            <h1 className="text-lg font-bold text-gray-900">{t('courseDetail.title')}</h1>
           </div>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* Cover */}
         <Card className="rounded-3xl shadow-sm border-0 overflow-hidden mb-6">
           <div className="relative aspect-video w-full overflow-hidden bg-gradient-to-br from-blue-100 to-purple-100">
             {course.cover_image ? (
               <img src={course.cover_image} alt={course.title} className="w-full h-full object-cover" />
             ) : (
               <div className="w-full h-full flex items-center justify-center text-6xl">
-                📚
+                📘
               </div>
             )}
             <div className="absolute top-3 left-3">
-              <Badge className="bg-blue-500 text-white">合作课程</Badge>
+              <Badge className="bg-blue-500 text-white">{t('courseDetail.badge')}</Badge>
             </div>
           </div>
           
           <div className="p-6">
             <h2 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h2>
             <p className="text-sm text-gray-600 mb-4">
-              与 <span className="font-semibold text-blue-600">{course.partner_name}</span> 合作
+              {t('courseDetail.by', { name: course.partner_name })}
             </p>
             <p className="text-sm text-gray-700 leading-relaxed mb-4">
               {course.description}
@@ -110,42 +110,41 @@ export default function CourseDetail() {
             
             <div className="flex items-center gap-4 mb-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-gray-600">共 {course.total_lessons} 节课</span>
+                <span className="text-sm text-gray-600">{t('courseDetail.totalLessons', { count: course.total_lessons })}</span>
               </div>
               <div className="flex items-center gap-2">
                 <Play className="w-4 h-4 text-teal-600" strokeWidth={1.5} />
                 <span className="text-sm text-teal-600 font-medium">
-                  可试看 {trialLessons} 节
+                  {t('courseDetail.trial', { count: trialLessons })}
                 </span>
               </div>
             </div>
 
             <div className="flex items-center justify-between pt-4 border-t border-gray-100">
               <div>
-                <p className="text-xs text-gray-500 mb-1">课程价格</p>
+                <p className="text-xs text-gray-500 mb-1">{t('courseDetail.priceLabel')}</p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-2xl font-bold text-orange-600">
-                    ￥{finalPrice?.toFixed(0)}
+                    {t('courseDetail.price', { price: finalPrice?.toFixed(0) })}
                   </span>
                   {isPlusUser && (
                     <span className="text-sm text-gray-400 line-through">
-                      ￥{course.price}
+                      {t('courseDetail.price', { price: course.price })}
                     </span>
                   )}
                 </div>
               </div>
               {isPlusUser && (
                 <Badge className="bg-amber-100 text-amber-700">
-                  Plus 专享 9折
+                  {t('courseDetail.discount')}
                 </Badge>
               )}
             </div>
           </div>
         </Card>
 
-        {/* Lessons Preview */}
         <div className="mb-6">
-          <h3 className="text-base font-bold text-gray-900 mb-3">课程目录</h3>
+          <h3 className="text-base font-bold text-gray-900 mb-3">{t('courseDetail.outline')}</h3>
           <div className="space-y-2">
             {Array.from({ length: course.total_lessons }).map((_, idx) => {
               const lessonNum = idx + 1;
@@ -171,16 +170,16 @@ export default function CourseDetail() {
                       </div>
                       <div className="flex-1">
                         <p className="text-sm font-medium text-gray-900">
-                          第 {lessonNum} 节
+                          {t('courseDetail.lesson', { num: lessonNum })}
                         </p>
                         <p className="text-xs text-gray-500">
-                          课程内容 {lessonNum}
+                          {t('courseDetail.lessonDesc', { num: lessonNum })}
                         </p>
                       </div>
                     </div>
                     {isTrial && (
                       <Badge className="bg-teal-50 text-teal-700 text-xs">
-                        可试看
+                        {t('courseCenter.trial', { count: 1 })}
                       </Badge>
                     )}
                   </div>
@@ -190,20 +189,19 @@ export default function CourseDetail() {
           </div>
         </div>
 
-        {/* CTA */}
         <div className="grid grid-cols-2 gap-3 sticky bottom-6">
           <Button
             variant="outline"
             className="rounded-2xl h-12 font-semibold"
-            onClick={() => alert('开始试看第1节课程')}
+            onClick={() => alert(t('courseDetail.preview'))}
           >
-            立即试看
+            {t('courseDetail.preview')}
           </Button>
           <Button
             className="bg-blue-600 hover:bg-blue-700 rounded-2xl h-12 font-semibold"
-            onClick={() => alert('支付功能开发中')}
+            onClick={() => alert(t('courseDetail.buy'))}
           >
-            购买完整课程
+            {t('courseDetail.buy')}
           </Button>
         </div>
       </div>

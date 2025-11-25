@@ -8,10 +8,12 @@ import CategoryBadge from '../components/eunoia/CategoryBadge';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useTranslation } from '@/i18n';
 
 export default function MyPost() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
 
@@ -32,7 +34,7 @@ export default function MyPost() {
 
   const handleDelete = async (postId, e) => {
     e.stopPropagation();
-    if (window.confirm('确定要删除这篇帖子吗？')) {
+    if (window.confirm(t('mypost.deleteConfirm'))) {
       await deletePostMutation.mutateAsync(postId);
     }
   };
@@ -49,7 +51,7 @@ export default function MyPost() {
             <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate(createPageUrl('EunoiaMe'))}>
               <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
             </Button>
-            <h1 className="text-xl font-bold text-gray-900">我的帖子</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('mypost.title')}</h1>
           </div>
         </div>
       </div>
@@ -76,11 +78,11 @@ export default function MyPost() {
                     </div>
                     <h3 className="text-sm font-semibold text-gray-900 mb-1 line-clamp-2">{post.title}</h3>
                     <p className="text-xs text-gray-600 line-clamp-2 mb-2">{post.content}</p>
-                    <div className="flex items-center gap-3 text-xs text-gray-500">
-                      <span>{post.likes_count || 0} 赞</span>
-                      <span>·</span>
-                      <span>{post.comments_count || 0} 评论</span>
-                      <span>·</span>
+                    <div className="flex items-center gap-2 text-xs text-gray-500">
+                      <span>{t('mypost.likes', { count: post.likes_count || 0 })}</span>
+                      <span>{t('mypost.separator')}</span>
+                      <span>{t('mypost.comments', { count: post.comments_count || 0 })}</span>
+                      <span>{t('mypost.separator')}</span>
                       <span>{format(new Date(post.created_at), 'MM/dd')}</span>
                     </div>
                   </div>
@@ -93,10 +95,10 @@ export default function MyPost() {
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-teal-100 flex items-center justify-center">
               <Edit className="w-10 h-10 text-teal-600" strokeWidth={1.5} />
             </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-2">还没有发布帖子</h3>
-            <p className="text-sm text-gray-500 mb-6">去广场分享你的想法吧</p>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">{t('mypost.emptyTitle')}</h3>
+            <p className="text-sm text-gray-500 mb-6">{t('mypost.emptyDesc')}</p>
             <Button className="bg-teal-500 hover:bg-teal-600 rounded-full px-6 flex items-center justify-center mx-auto" onClick={() => navigate(createPageUrl('CreatePost'))}>
-              发布帖子
+              {t('mypost.create')}
             </Button>
           </div>
         )}
@@ -104,4 +106,3 @@ export default function MyPost() {
     </div>
   );
 }
-

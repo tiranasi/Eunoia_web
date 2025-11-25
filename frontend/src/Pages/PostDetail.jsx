@@ -1,4 +1,3 @@
-﻿
 import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -6,12 +5,13 @@ import { ArrowLeft, Heart, MessageCircle, Send, MoreVertical, Sparkles, Download
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge'; // Keep Badge import, it's used
+import { Badge } from '@/components/ui/badge';
 import CategoryBadge from '../components/eunoia/CategoryBadge';
 import { base44 } from '@/api/base44Client';
 import { isRenderableImage } from '@/utils/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useTranslation } from '@/i18n';
 
 export default function PostDetail() {
   const navigate = useNavigate();
@@ -21,6 +21,7 @@ export default function PostDetail() {
   const queryClient = useQueryClient();
   const [commentText, setCommentText] = useState('');
   const [importing, setImporting] = useState(false);
+  const { t } = useTranslation();
 
   const { data: post } = useQuery({
     queryKey: ['post', postId],
@@ -31,7 +32,6 @@ export default function PostDetail() {
     enabled: !!postId,
   });
 
-  // 发帖人资料（昵称与头像）
   const { data: authorProfile } = useQuery({
     queryKey: ['userProfile', post?.created_by],
     queryFn: async () => {
@@ -52,7 +52,6 @@ export default function PostDetail() {
     initialData: [],
   });
 
-  // 评论用户资料映射：email -> profile
   const { data: commentProfiles = {} } = useQuery({
     queryKey: ['commentProfiles', postId, comments.length],
     queryFn: async () => {
@@ -100,14 +99,13 @@ export default function PostDetail() {
           liked_by: (post?.liked_by || []).filter(email => email !== userEmail),
         });
       } else {
-        // 创建点赞通知
         if (post?.created_by !== userEmail) {
           await base44.entities.Notification.create({
             type: 'like',
             post_id: postId,
             post_title: post?.title || '',
             actor_email: userEmail,
-            actor_name: user?.nickname || user?.full_name || '匿名用户',
+            actor_name: user?.nickname || user?.full_name || t('me.displayNameFallback'),
             recipient_email: post?.created_by,
           });
         }
@@ -129,21 +127,20 @@ export default function PostDetail() {
       const comment = await base44.entities.Comment.create({
         post_id: idNum,
         content,
-        author_name: user?.nickname || user?.full_name || '匿名用户',
+        author_name: user?.nickname || user?.full_name || t('me.displayNameFallback'),
       });
       
       await base44.entities.Post.update(postId, {
         comments_count: (post?.comments_count || 0) + 1,
       });
 
-      // 创建评论通知
       if (post?.created_by !== user?.email) {
         await base44.entities.Notification.create({
           type: 'comment',
           post_id: postId,
           post_title: post?.title || '',
           actor_email: user?.email,
-          actor_name: user?.nickname || user?.full_name || '匿名用户',
+          actor_name: user?.nickname || user?.full_name || t('me.displayNameFallback'),
           recipient_email: post?.created_by,
           comment_content: content,
         });
@@ -173,14 +170,13 @@ export default function PostDetail() {
           post_author_email: post?.created_by,
         });
 
-        // 创建收藏通知
         if (post?.created_by !== user?.email) {
           await base44.entities.Notification.create({
             type: 'favorite',
             post_id: idNum,
             post_title: post?.title || '',
             actor_email: user?.email,
-            actor_name: user?.nickname || user?.full_name || '匿名用户',
+            actor_name: user?.nickname || user?.full_name || t('me.displayNameFallback'),
             recipient_email: post?.created_by,
           });
         }
@@ -193,10 +189,8 @@ export default function PostDetail() {
 
   const handleImportStyle = async () => {
     if (!post?.shared_style_data || !user?.email) return;
-    
-    // 检查是否是自己的角色
     if (post.shared_style_data.author_email === user.email) {
-      alert('这是你自己创建的角色，无需导入');
+      alert(t('postDetail.import.self'));
       return;
     }
 
@@ -206,10 +200,9 @@ export default function PostDetail() {
       const alreadyImported = myStyles.find(s => s.original_style_id === post.shared_style_id);
       
       if (alreadyImported) {
-        alert('你已经添加过这个角色');
+        alert(t('postDetail.import.exists'));
         return;
       }
-
 
       await base44.entities.ChatStyle.create({
         name: post.shared_style_data.name,
@@ -223,13 +216,11 @@ export default function PostDetail() {
         original_style_id: post.shared_style_id,
       });
 
-      // 刷新数据并显示提示
       await queryClient.invalidateQueries({ queryKey: ['chatStyles'] });
-      
-      alert('已添加到我的样式'); // Show alert instead of navigating
+      alert(t('postDetail.import.success'));
     } catch (error) {
-      console.error('添加角色失败:', error);
-      alert('添加角色失败，请重试');
+      console.error('import style failed:', error);
+      alert(t('postDetail.import.failed'));
     } finally {
       setImporting(false);
     }
@@ -256,14 +247,13 @@ export default function PostDetail() {
   if (!post) {
     return (
       <div className="min-h-screen bg-gradient-to-b from-teal-50/30 to-white flex items-center justify-center">
-        <p className="text-gray-500">加载中…</p>
+        <p className="text-gray-500">{t('postDetail.notFound')}</p>
       </div>
     );
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50/30 to-white pb-8">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center justify-between pt-4">
@@ -275,7 +265,7 @@ export default function PostDetail() {
             >
               <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
             </Button>
-            <h1 className="text-lg font-bold text-gray-900">帖子详情</h1>
+            <h1 className="text-lg font-bold text-gray-900">{t('postDetail.title')}</h1>
             <Button variant="ghost" size="icon" className="rounded-full flex items-center justify-center">
               <MoreVertical className="w-5 h-5" strokeWidth={1.5} />
             </Button>
@@ -284,7 +274,6 @@ export default function PostDetail() {
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6">
-        {/* Post Content */}
         <Card className="rounded-3xl shadow-sm border-0 overflow-hidden mb-6">
           {post.image_url && (
             <div className="relative aspect-video w-full overflow-hidden">
@@ -296,15 +285,14 @@ export default function PostDetail() {
             <div className="flex items-center justify-between mb-4">
               <CategoryBadge category={post.category} />
               <p className="text-xs text-gray-500">
-                      {format(new Date(post.created_at), 'MM/dd HH:mm')}
+                {format(new Date(post.created_at), 'MM/dd HH:mm')}
               </p>
             </div>
 
-            {/* 发帖人头像与昵称 */}
             <div className="flex items-center gap-3 mb-3">
               <div className="w-9 h-9 rounded-full overflow-hidden flex-shrink-0">
                 {isRenderableImage(authorProfile?.avatar_url) ? (
-                  <img src={authorProfile.avatar_url} alt="作者头像" className="w-full h-full object-cover" />
+                  <img src={authorProfile.avatar_url} alt="author" className="w-full h-full object-cover" />
                 ) : (
                   <div className="w-full h-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-sm font-semibold">
                     {(authorProfile?.nickname || authorProfile?.full_name || post.created_by)?.[0]?.toUpperCase() || 'U'}
@@ -321,55 +309,47 @@ export default function PostDetail() {
             <h2 className="text-xl font-bold text-gray-900 mb-3">{post.title}</h2>
             <p className="text-sm text-gray-700 leading-relaxed mb-4 whitespace-pre-wrap">{post.content}</p>
 
-            {/* AI Relief - Shared Style Card */}
             {isAIRelief && post.shared_style_data && (
               <Card className="mb-4 p-4 rounded-2xl bg-gradient-to-br from-teal-50 to-teal-100 border-teal-200">
-                {/* Note: The 'styleDeleted' logic using originalStyle query is removed,
-                    The check for originalStyle's existence is now handled inside handleImportStyle.
-                    For display purposes, we assume it's valid unless the import fails or original author deleted.
-                    If the original style is deleted, the handleImportStyle will alert the user, but the card
-                    itself will still display the data if available in shared_style_data. */}
-                  <>
-                    <div className="flex items-start gap-3 mb-3">
-                      <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center flex-shrink-0">
-                        {isRenderableImage(post.shared_style_data?.avatar) ? (
-                          <img src={post.shared_style_data.avatar} alt="" className="w-full h-full object-cover" />
-                        ) : (
-                          <span className="text-2xl">{post.shared_style_data.avatar || '🙂'}</span>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
-                          <Sparkles className="w-4 h-4 text-teal-600" strokeWidth={1.5} />
-                          <p className="text-sm font-semibold text-gray-900">
-                            {post.shared_style_data.name}
-                          </p>
-                        </div>
-                        <p className="text-xs text-gray-600 mb-2">
-                          by {post.shared_style_data.author_name}
-                        </p>
-                        <p className="text-xs text-gray-700 leading-relaxed line-clamp-2">
-                          {post.shared_style_data.personality}
-                        </p>
-                      </div>
-                    </div>
-                    {post.shared_style_data.author_email !== user?.email && (
-                      <Button
-                        className="w-full bg-teal-500 hover:bg-teal-600 text-white rounded-2xl h-10 font-medium flex items-center justify-center"
-                        onClick={handleImportStyle}
-                        disabled={importing}
-                      >
-                        {importing ? (
-                          '添加中…'
-                        ) : (
-                          <>
-                            <Download className="w-4 h-4 mr-2" strokeWidth={2} />
-                            将此角色添加到我的样式
-                          </>
-                        )}
-                      </Button>
+                <div className="flex items-start gap-3 mb-3">
+                  <div className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center flex-shrink-0">
+                    {isRenderableImage(post.shared_style_data?.avatar) ? (
+                      <img src={post.shared_style_data.avatar} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-2xl">{post.shared_style_data.avatar || '🤖'}</span>
                     )}
-                  </>
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Sparkles className="w-4 h-4 text-teal-600" strokeWidth={1.5} />
+                      <p className="text-sm font-semibold text-gray-900">
+                        {post.shared_style_data.name}
+                      </p>
+                    </div>
+                    <p className="text-xs text-gray-600 mb-2">
+                      by {post.shared_style_data.author_name}
+                    </p>
+                    <p className="text-xs text-gray-700 leading-relaxed line-clamp-2">
+                      {post.shared_style_data.personality}
+                    </p>
+                  </div>
+                </div>
+                {post.shared_style_data.author_email !== user?.email && (
+                  <Button
+                    className="w-full bg-teal-500 hover:bg-teal-600 text-white rounded-2xl h-10 font-medium flex items-center justify-center"
+                    onClick={handleImportStyle}
+                    disabled={importing}
+                  >
+                    {importing ? (
+                      t('postDetail.import.importing')
+                    ) : (
+                      <>
+                        <Download className="w-4 h-4 mr-2" strokeWidth={2} />
+                        {t('postDetail.import.cta')}
+                      </>
+                    )}
+                  </Button>
+                )}
               </Card>
             )}
 
@@ -383,7 +363,6 @@ export default function PostDetail() {
               </div>
             )}
 
-            {/* Actions */}
             <div className="flex items-center gap-4 pt-4 border-t border-gray-100">
               <Button
                 variant="ghost"
@@ -424,11 +403,9 @@ export default function PostDetail() {
           </div>
         </Card>
 
-        {/* Comments Section */}
         <div className="space-y-4">
-          <h3 className="text-base font-bold text-gray-900">评论 ({comments.length})</h3>
+          <h3 className="text-base font-bold text-gray-900">{t('postDetail.comments', { count: comments.length })}</h3>
 
-          {/* Comment Input */}
           <Card className="p-4 rounded-3xl shadow-sm border-0">
             <div className="flex gap-2 items-start">
               <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
@@ -443,7 +420,7 @@ export default function PostDetail() {
               <Textarea
                 value={commentText}
                 onChange={(e) => setCommentText(e.target.value)}
-                placeholder="写下你的评论..."
+                placeholder={t('postDetail.commentPlaceholder')}
                 className="rounded-2xl min-h-[80px] resize-none flex-1"
               />
               <Button
@@ -457,14 +434,13 @@ export default function PostDetail() {
             </div>
           </Card>
 
-          {/* Comments List */}
           <div className="space-y-3">
             {comments.map((comment) => (
               <Card key={comment.id} className="p-4 rounded-2xl shadow-sm border-0">
                 <div className="flex items-start gap-3">
                   <div className="w-8 h-8 rounded-full overflow-hidden flex-shrink-0">
                     {isRenderableImage(commentProfiles[comment.created_by]?.avatar_url) ? (
-                      <img src={commentProfiles[comment.created_by].avatar_url} alt="头像" className="w-full h-full object-cover" />
+                      <img src={commentProfiles[comment.created_by].avatar_url} alt="avatar" className="w-full h-full object-cover" />
                     ) : (
                       <div className="w-full h-full bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white text-sm font-semibold">
                         {comment.author_name?.[0]?.toUpperCase() || 'A'}
@@ -474,7 +450,7 @@ export default function PostDetail() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <p className="text-sm font-semibold text-gray-900">
-                        {comment.author_name || '匿名用户'}
+                        {comment.author_name || t('me.displayNameFallback')}
                       </p>
                       <p className="text-xs text-gray-500">
                         {format(new Date(comment.created_at), 'MM/dd HH:mm')}
@@ -488,7 +464,7 @@ export default function PostDetail() {
 
             {comments.length === 0 && (
               <div className="text-center py-8">
-                <p className="text-sm text-gray-500">暂时没有评论，快来发表吧～</p>
+                <p className="text-sm text-gray-500">{t('postDetail.noComments')}</p>
               </div>
             )}
           </div>
@@ -497,7 +473,3 @@ export default function PostDetail() {
     </div>
   );
 }
-
-
-
-

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Badge } from '@/components/ui/badge';
+import { useTranslation } from '@/i18n';
 
 const categoryStyles = {
   'AI Relief': 'bg-teal-100 text-teal-700 border-teal-200',
@@ -8,7 +9,18 @@ const categoryStyles = {
   'Challenges': 'bg-purple-100 text-purple-700 border-purple-200',
 };
 
+const categoryKeyMap = {
+  'AI Relief': 'square.categories.ai',
+  'Treehole': 'square.categories.treehole',
+  'Support Center': 'square.categories.support',
+  'Challenges': 'square.categories.challenges',
+  mixed: 'square.categories.mixed',
+};
+
 export default function CategoryBadge({ category, size = 'sm' }) {
+  const { t } = useTranslation();
+  const label = categoryKeyMap[category] ? t(categoryKeyMap[category]) : category;
+
   return (
     <Badge 
       className={`${categoryStyles[category] || 'bg-gray-100 text-gray-700'} border font-medium ${
@@ -16,7 +28,7 @@ export default function CategoryBadge({ category, size = 'sm' }) {
       }`}
       variant="outline"
     >
-      {category}
+      {label}
     </Badge>
   );
 }

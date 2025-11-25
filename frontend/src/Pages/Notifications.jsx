@@ -7,10 +7,12 @@ import { Card } from '@/components/ui/card';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useTranslation } from '@/i18n';
 
 export default function Notifications() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -21,7 +23,7 @@ export default function Notifications() {
     queryKey: ['notifications'],
     queryFn: async () => {
       if (!user?.email) return [];
-  const allNotifications = await base44.entities.Notification.list('-created_at');
+      const allNotifications = await base44.entities.Notification.list('-created_at');
       return allNotifications.filter(n => n.recipient_email === user.email);
     },
     enabled: !!user?.email,
@@ -58,11 +60,11 @@ export default function Notifications() {
   const getNotificationText = (notification) => {
     switch (notification.type) {
       case 'like':
-        return `点赞了你的帖子`;
+        return t('notifications.like');
       case 'favorite':
-        return `收藏了你的帖子`;
+        return t('notifications.favorite');
       case 'comment':
-        return `评论了你的帖子`;
+        return t('notifications.comment');
       default:
         return '';
     }
@@ -70,19 +72,18 @@ export default function Notifications() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50/30 to-white pb-8">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center gap-3 pt-4">
-            <Button 
-              variant="ghost" 
+            <Button
+              variant="ghost"
               size="icon"
               className="rounded-full"
               onClick={() => navigate(-1)}
             >
               <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
             </Button>
-            <h1 className="text-xl font-bold text-gray-900">通知</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('notifications.title')}</h1>
           </div>
         </div>
       </div>
@@ -104,12 +105,11 @@ export default function Notifications() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm text-gray-900 mb-1">
-                      <span className="font-semibold">{notification.actor_name}</span>
-                      {' '}
+                      <span className="font-semibold">{notification.actor_name}</span>{' '}
                       <span className="text-gray-600">{getNotificationText(notification)}</span>
                     </p>
                     <p className="text-sm font-medium text-gray-900 mb-1 line-clamp-1">
-                      「{notification.post_title}」
+                      {t('notifications.postPrefix')}: {notification.post_title}
                     </p>
                     {notification.type === 'comment' && notification.comment_content && (
                       <p className="text-xs text-gray-600 mb-2 line-clamp-2">
@@ -117,7 +117,7 @@ export default function Notifications() {
                       </p>
                     )}
                     <p className="text-xs text-gray-500">
-            {format(new Date(notification.created_at), 'MM/dd HH:mm')}
+                      {t('notifications.viewTime', { time: format(new Date(notification.created_at), 'MM/dd HH:mm') })}
                     </p>
                   </div>
                   {!notification.is_read && (
@@ -132,8 +132,8 @@ export default function Notifications() {
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-gray-100 flex items-center justify-center">
               <MessageCircle className="w-10 h-10 text-gray-400" strokeWidth={1.5} />
             </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-2">暂无通知</h3>
-            <p className="text-sm text-gray-500">当有人点赞、收藏或评论你的帖子时会显示在这里</p>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">{t('notifications.emptyTitle')}</h3>
+            <p className="text-sm text-gray-500">{t('notifications.emptyDesc')}</p>
           </div>
         )}
       </div>

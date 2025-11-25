@@ -2,7 +2,7 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Bell, Settings, ChevronRight, FileText, Bookmark, Edit, MessageSquare, BarChart3, Shield, BellRing, Palette, Database, HelpCircle, Info, LogOut, Sparkles } from 'lucide-react';
+import { Bell, Settings, ChevronRight, FileText, Bookmark, Edit, MessageSquare, BarChart3, Shield, BellRing, Palette, Database, HelpCircle, Info, LogOut, Sparkles, Globe } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,46 +10,49 @@ import BottomNav from '../components/eunoia/BottomNav';
 import { base44 } from '@/api/base44Client';
 import { isRenderableImage } from '@/utils/image';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation, languageOptions } from '@/i18n';
 
 const featureGrid = [
-  { id: 1, icon: FileText, label: 'My Posts', badge: null, color: 'teal', page: 'MyPost' },
-  { id: 2, icon: Bookmark, label: 'Favorites', badge: null, color: 'pink', page: 'Favorites' },
-  { id: 3, icon: Edit, label: 'Drafts', badge: null, color: 'purple', page: 'Drafts' },
-  { id: 4, icon: MessageSquare, label: 'Replies', badge: null, color: 'blue', page: 'Replies' },
+  { id: 1, icon: FileText, labelKey: 'me.feature.myPosts', badge: null, color: 'teal', page: 'MyPost' },
+  { id: 2, icon: Bookmark, labelKey: 'me.feature.favorites', badge: null, color: 'pink', page: 'Favorites' },
+  { id: 3, icon: Edit, labelKey: 'me.feature.drafts', badge: null, color: 'purple', page: 'Drafts' },
+  { id: 4, icon: MessageSquare, labelKey: 'me.feature.replies', badge: null, color: 'blue', page: 'Replies' },
 ];
 
 const settingsSections = [
   {
-    title: 'Account & Privacy',
+    titleKey: 'me.section.account',
     items: [
-      { icon: Shield, label: 'Privacy Settings', page: null },
-      { icon: Database, label: 'Data Management', page: null },
+      { icon: Shield, labelKey: 'me.item.privacy', page: null },
+      { icon: Database, labelKey: 'me.item.data', page: null },
     ],
   },
   {
-    title: 'Subscription',
+    titleKey: 'me.section.subscription',
     items: [
-      { icon: Sparkles, label: 'Subscription Management', page: 'PlusSubscription' },
+      { icon: Sparkles, labelKey: 'me.item.subscriptionManage', page: 'PlusSubscription' },
     ],
   },
   {
-    title: 'Preferences',
+    titleKey: 'me.section.preferences',
     items: [
-      { icon: BellRing, label: 'Notifications', page: null },
-      { icon: Palette, label: 'Appearance', page: null },
+      { icon: BellRing, labelKey: 'me.item.notifications', page: null },
+      { icon: Palette, labelKey: 'me.item.appearance', page: null },
+      { icon: Globe, labelKey: 'me.item.language', type: 'language' },
     ],
   },
   {
-    title: 'Support',
+    titleKey: 'me.section.support',
     items: [
-      { icon: HelpCircle, label: 'Help & Feedback', page: null },
-      { icon: Info, label: 'About & Terms', page: null },
+      { icon: HelpCircle, labelKey: 'me.item.help', page: null },
+      { icon: Info, labelKey: 'me.item.about', page: null },
     ],
   },
 ];
 
 export default function EunoiaMe() {
   const navigate = useNavigate();
+  const { t, lang, changeLanguage } = useTranslation();
   
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -98,7 +101,7 @@ export default function EunoiaMe() {
 
   const unreadRepliesCount = replies.length;
 
-  const displayName = user?.nickname || user?.full_name || 'User';
+  const displayName = user?.nickname || user?.full_name || t('me.displayNameFallback');
   const displayAvatar = user?.avatar || user?.avatar_url;
   // user.id 为 Prisma Int，直接 .slice 会报错；转为字符串再截取
   const displayBio = user?.bio || 'ID: eunoia_#' + String(user?.id ?? '').slice(0, 6);
@@ -109,7 +112,7 @@ export default function EunoiaMe() {
       <div className="bg-white border-b border-gray-100">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center justify-between pt-4">
-            <h1 className="text-2xl font-bold text-gray-900">Me</h1>
+            <h1 className="text-2xl font-bold text-gray-900">{t('me.title')}</h1>
             <div className="flex items-center gap-2">
               <Button 
                 variant="ghost" 
@@ -129,7 +132,7 @@ export default function EunoiaMe() {
                   className="rounded-full px-3 h-8 text-xs"
                   onClick={() => navigate(createPageUrl('Admin'))}
                 >
-                  Admin
+                  {t('me.admin')}
                 </Button>
               )}
               <Button variant="ghost" size="icon" className="rounded-full flex items-center justify-center">
@@ -163,7 +166,7 @@ export default function EunoiaMe() {
                   className="rounded-full h-8 px-4 text-xs font-medium"
                   onClick={() => navigate(createPageUrl('EditProfile'))}
                 >
-                  Edit Profile
+                  {t('me.editProfile')}
                 </Button>
               </div>
             </div>
@@ -202,7 +205,7 @@ export default function EunoiaMe() {
                       </Badge>
                     )}
                   </div>
-                  <p className="text-sm font-medium text-gray-900">{item.label}</p>
+                  <p className="text-sm font-medium text-gray-900">{t(item.labelKey)}</p>
                 </Card>
               );
             })}
@@ -220,14 +223,14 @@ export default function EunoiaMe() {
                 <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center">
                   <BarChart3 className="w-5 h-5 text-purple-600" strokeWidth={1.5} />
                 </div>
-                <h3 className="font-semibold text-gray-900 text-sm">Emotion Analysis</h3>
+                <h3 className="font-semibold text-gray-900 text-sm">{t('me.emotionAnalysis.title')}</h3>
               </div>
               {newReportsCount > 0 && (
-                <Badge className="bg-pink-500 text-white text-xs">New: {newReportsCount}</Badge>
+                <Badge className="bg-pink-500 text-white text-xs">{t('me.emotionAnalysis.new', { count: newReportsCount })}</Badge>
               )}
             </div>
             <p className="text-xs text-gray-600 leading-relaxed mb-3 ml-12">
-              Authorize to analyze recent chats and generate a saved report
+              {t('me.emotionAnalysis.desc')}
             </p>
             <Button 
               size="sm"
@@ -237,7 +240,7 @@ export default function EunoiaMe() {
                 navigate(createPageUrl('EmotionReports'));
               }}
             >
-              View Reports
+              {t('me.emotionAnalysis.button')}
             </Button>
           </Card>
         </div>
@@ -247,23 +250,48 @@ export default function EunoiaMe() {
           {settingsSections.map((section, idx) => (
             <div key={idx}>
               <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 px-1">
-                {section.title}
+                {t(section.titleKey)}
               </h3>
               <Card className="rounded-2xl shadow-sm border-0 overflow-hidden">
                 {section.items.map((item, itemIdx) => {
                   const Icon = item.icon;
-                  const isSubscriptionItem = section.title === 'Subscription' && item.page === 'PlusSubscription';
+                  const isSubscriptionItem = section.titleKey === 'me.section.subscription' && item.page === 'PlusSubscription';
+                  const isLanguageItem = item.type === 'language';
+                  const baseRowClasses = `w-full flex items-center justify-between p-4 transition-colors ${
+                    itemIdx < section.items.length - 1 ? 'border-b border-gray-100' : ''
+                  } ${isSubscriptionItem ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-gray-50'}`;
+
+                  if (isLanguageItem) {
+                    return (
+                      <div key={itemIdx} className={baseRowClasses}>
+                        <div className="flex items-center gap-3">
+                          <Icon className="w-5 h-5 text-gray-500" strokeWidth={1.5} />
+                          <span className="text-sm font-medium text-gray-900">{t(item.labelKey)}</span>
+                        </div>
+                        <select
+                          className="h-9 rounded-full border border-gray-200 px-3 text-xs bg-white"
+                          value={lang}
+                          onChange={(e) => changeLanguage(e.target.value)}
+                        >
+                          {languageOptions.map((opt) => (
+                            <option key={opt.value} value={opt.value}>
+                              {opt.label}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    );
+                  }
+
                   return (
                     <button
                       key={itemIdx}
-                      className={`w-full flex items-center justify-between p-4 transition-colors ${
-                        itemIdx < section.items.length - 1 ? 'border-b border-gray-100' : ''
-                      } ${isSubscriptionItem ? 'bg-amber-50 hover:bg-amber-100' : 'hover:bg-gray-50'}`}
+                      className={baseRowClasses}
                       onClick={() => item.page && navigate(createPageUrl(item.page))}
                     >
                       <div className="flex items-center gap-3">
                         <Icon className={`w-5 h-5 ${isSubscriptionItem ? 'text-amber-600' : 'text-gray-500'}`} strokeWidth={1.5} />
-                        <span className={`text-sm font-medium ${isSubscriptionItem ? 'text-amber-800' : 'text-gray-900'}`}>{item.label}</span>
+                        <span className={`text-sm font-medium ${isSubscriptionItem ? 'text-amber-800' : 'text-gray-900'}`}>{t(item.labelKey)}</span>
                       </div>
                       <ChevronRight className={`w-4 h-4 ${isSubscriptionItem ? 'text-amber-500' : 'text-gray-400'}`} strokeWidth={1.5} />
                     </button>
@@ -282,10 +310,10 @@ export default function EunoiaMe() {
             onClick={() => { try { localStorage.removeItem('token'); } catch(_){}; navigate(createPageUrl('Login')); }}
           >
             <LogOut className="w-5 h-5 mr-2" strokeWidth={1.5} />
-            Log Out
+            {t('me.logout')}
           </Button>
           <p className="text-xs text-gray-500 text-center mt-3">
-            On shared devices, clear local cache before logout
+            {t('me.logoutHint')}
           </p>
         </div>
       </div>

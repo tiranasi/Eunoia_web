@@ -7,9 +7,11 @@ import { Card } from '@/components/ui/card';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useTranslation } from '@/i18n';
 
 export default function Replies() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -20,7 +22,7 @@ export default function Replies() {
     queryKey: ['replies'],
     queryFn: async () => {
       if (!user?.email) return [];
-  const allNotifications = await base44.entities.Notification.list('-created_at');
+      const allNotifications = await base44.entities.Notification.list('-created_at');
       return allNotifications.filter(n => 
         n.recipient_email === user.email && n.type === 'comment'
       );
@@ -42,7 +44,6 @@ export default function Replies() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50/30 to-white pb-8">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center gap-3 pt-4">
@@ -54,7 +55,7 @@ export default function Replies() {
             >
               <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
             </Button>
-            <h1 className="text-xl font-bold text-gray-900">评论回复</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('replies.title')}</h1>
           </div>
         </div>
       </div>
@@ -78,11 +79,11 @@ export default function Replies() {
                         {notification.actor_name}
                       </p>
                       <p className="text-xs text-gray-500">
-        {format(new Date(notification.created_at), 'MM/dd HH:mm')}
+                        {t('replies.time', { time: format(new Date(notification.created_at), 'MM/dd HH:mm') })}
                       </p>
                     </div>
                     <p className="text-sm text-gray-700 mb-2">
-                      评论了你的帖子 <span className="font-medium">「{notification.post_title}」</span>
+                      {t('replies.onPost')} <span className="font-medium">{notification.post_title}</span>
                     </p>
                     {notification.comment_content && (
                       <div className="bg-gray-50 rounded-xl p-3 mt-2">
@@ -101,13 +102,13 @@ export default function Replies() {
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
               <MessageSquare className="w-10 h-10 text-blue-600" strokeWidth={1.5} />
             </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-2">暂无评论</h3>
-            <p className="text-sm text-gray-500 mb-6">当有人评论你的帖子时会显示在这里</p>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">{t('replies.emptyTitle')}</h3>
+            <p className="text-sm text-gray-500 mb-6">{t('replies.emptyDesc')}</p>
             <Button
               className="bg-blue-500 hover:bg-blue-600 rounded-full px-6"
               onClick={() => navigate(createPageUrl('EunoiaSquare'))}
             >
-              去广场看看
+              {t('replies.goSquare')}
             </Button>
           </div>
         )}

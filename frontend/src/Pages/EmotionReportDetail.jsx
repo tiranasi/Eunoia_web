@@ -7,6 +7,7 @@ import { Progress } from '@/components/ui/progress';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useTranslation } from '@/i18n';
 
 export default function EmotionReportDetail() {
   const navigate = useNavigate();
@@ -14,6 +15,7 @@ export default function EmotionReportDetail() {
   const reportId = searchParams.get('id');
   const idNum = Number(reportId);
   const queryClient = useQueryClient();
+  const { t } = useTranslation();
 
   const { data: report, isLoading } = useQuery({
     queryKey: ['emotionReport', idNum],
@@ -36,7 +38,7 @@ export default function EmotionReportDetail() {
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
             <BarChart3 className="w-8 h-8 text-purple-600 animate-pulse" strokeWidth={1.5} />
           </div>
-          <p className="text-gray-500">加载中...</p>
+          <p className="text-gray-500">{t('emotionReportDetail.loading')}</p>
         </div>
       </div>
     );
@@ -46,8 +48,8 @@ export default function EmotionReportDetail() {
     return (
       <div className="min-h-screen bg-gradient-to-b from-purple-50/30 to-white flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-500 mb-4">报告不存在</p>
-          <Button onClick={() => navigate(-1)} variant="outline">返回</Button>
+          <p className="text-gray-500 mb-4">{t('emotionReportDetail.notFound')}</p>
+          <Button onClick={() => navigate(-1)} variant="outline">{t('emotionReportDetail.back')}</Button>
         </div>
       </div>
     );
@@ -60,9 +62,9 @@ export default function EmotionReportDetail() {
           <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
             <Clock className="w-10 h-10 text-purple-600 animate-spin" strokeWidth={1.5} />
           </div>
-          <h3 className="text-lg font-bold text-gray-900 mb-2">报告分析中...</h3>
-          <p className="text-sm text-gray-500 mb-6">AI 正在分析您的对话记录，预计需 1-2 分钟</p>
-          <Button onClick={() => navigate(-1)} variant="outline">返回</Button>
+          <h3 className="text-lg font-bold text-gray-900 mb-2">{t('emotionReportDetail.generatingTitle')}</h3>
+          <p className="text-sm text-gray-500 mb-6">{t('emotionReportDetail.generatingDesc')}</p>
+          <Button onClick={() => navigate(-1)} variant="outline">{t('emotionReportDetail.back')}</Button>
         </div>
       </div>
     );
@@ -77,9 +79,9 @@ export default function EmotionReportDetail() {
   const emotions = Array.isArray(emotionsRaw)
     ? emotionsRaw.map((e) => {
         if (typeof e === 'string') return { label: e, value: null, description: '' };
-        const label = e.label || e.emotion || '情绪';
+        const label = e.label || e.emotion || t('emotionReportDetail.emotions');
         let value = null;
-        if (typeof e.value === 'number') value = e.value; // 0..1
+        if (typeof e.value === 'number') value = e.value;
         else if (typeof e.percentage === 'number') value = Math.max(0, Math.min(1, e.percentage / 100));
         const description = e.description || '';
         return { label, value, description };
@@ -95,13 +97,12 @@ export default function EmotionReportDetail() {
             <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate(-1)}>
               <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
             </Button>
-            <h1 className="text-xl font-bold text-gray-900">分析报告</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('emotionReportDetail.title')}</h1>
           </div>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        {/* Header Card */}
         <Card className="p-6 rounded-3xl bg-gradient-to-br from-purple-500 to-pink-500 text-white border-0">
           <div className="flex items-start gap-4">
             <div className="w-14 h-14 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
@@ -110,40 +111,37 @@ export default function EmotionReportDetail() {
             <div className="flex-1 min-w-0">
               <h2 className="text-lg font-bold mb-1">{report.title}</h2>
               <div className="text-xs text-white/90 space-x-2">
-                <span>分析了 {Array.isArray(report.selected_chats) ? report.selected_chats.length : 0} 条对话记录</span>
+                <span>{t('emotionReportDetail.header.chatCount', { count: Array.isArray(report.selected_chats) ? report.selected_chats.length : 0 })}</span>
                 <span>·</span>
-                <span>{format(new Date(report.created_at), 'yyyy-MM-dd HH:mm')}</span>
+                <span>{t('emotionReportDetail.header.time', { time: format(new Date(report.created_at), 'yyyy-MM-dd HH:mm') })}</span>
               </div>
             </div>
           </div>
         </Card>
 
-        {/* 总体评估 */}
         {overall && (
           <Card className="p-5 rounded-3xl border-0 bg-rose-50">
             <div className="flex items-center gap-2 mb-2 text-rose-600">
               <Heart className="w-4 h-4" />
-              <h3 className="text-sm font-semibold text-gray-900">总体评估</h3>
+              <h3 className="text-sm font-semibold text-gray-900">{t('emotionReportDetail.overview')}</h3>
             </div>
             <p className="text-sm text-gray-700 leading-relaxed">{overall}</p>
           </Card>
         )}
 
-        {/* 情绪倾向 */}
         {trend && (
           <Card className="p-5 rounded-3xl border-0 bg-indigo-50">
             <div className="flex items-center gap-2 mb-2 text-rose-600">
               <TrendingUp className="w-4 h-4" />
-              <h3 className="text-sm font-semibold text-gray-900">情绪倾向</h3>
+              <h3 className="text-sm font-semibold text-gray-900">{t('emotionReportDetail.trend')}</h3>
             </div>
             <p className="text-sm text-gray-700 leading-relaxed">{trend}</p>
           </Card>
         )}
 
-        {/* 主要情绪分布 */}
         {emotions.length > 0 && (
           <Card className="p-5 rounded-3xl border-0 bg-white shadow-sm">
-            <h3 className="text-sm font-semibold text-gray-900 mb-4">主要情绪分布</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-4">{t('emotionReportDetail.emotions')}</h3>
             <div className="space-y-3">
               {emotions.map((e, idx) => (
                 <div key={idx}>
@@ -159,12 +157,11 @@ export default function EmotionReportDetail() {
           </Card>
         )}
 
-        {/* 需要关注的方面 */}
         {Array.isArray(concerns) && concerns.length > 0 && (
           <Card className="p-5 rounded-3xl border-0 bg-amber-50">
             <div className="flex items-center gap-2 mb-2 text-amber-600">
               <AlertTriangle className="w-4 h-4" />
-              <h3 className="text-sm font-semibold">需要关注的方面</h3>
+              <h3 className="text-sm font-semibold">{t('emotionReportDetail.concerns')}</h3>
             </div>
             <ul className="list-disc pl-5 text-sm text-amber-900 space-y-1">
               {concerns.map((c, idx) => (<li key={idx}>{c}</li>))}
@@ -172,12 +169,11 @@ export default function EmotionReportDetail() {
           </Card>
         )}
 
-        {/* 改善建议 */}
         {Array.isArray(suggestions) && suggestions.length > 0 && (
           <Card className="p-5 rounded-3xl border-0 bg-emerald-50">
             <div className="flex items-center gap-2 mb-2 text-emerald-600">
               <Lightbulb className="w-4 h-4" />
-              <h3 className="text-sm font-semibold text-gray-900">改善建议</h3>
+              <h3 className="text-sm font-semibold text-gray-900">{t('emotionReportDetail.suggestions')}</h3>
             </div>
             <ol className="list-decimal pl-5 text-sm text-gray-700 space-y-1">
               {suggestions.map((r, idx) => (<li key={idx}>{r}</li>))}
@@ -185,23 +181,21 @@ export default function EmotionReportDetail() {
           </Card>
         )}
 
-        {/* 原始结果兜底 */}
         {!overall && !trend && emotions.length === 0 && suggestions.length === 0 && rawText && (
           <Card className="p-5 rounded-3xl border-0">
-            <h3 className="text-sm font-semibold text-gray-900 mb-2">原始结果</h3>
+            <h3 className="text-sm font-semibold text-gray-900 mb-2">{t('emotionReportDetail.raw')}</h3>
             <pre className="whitespace-pre-wrap text-sm text-gray-700">{rawText}</pre>
           </Card>
         )}
 
-        {/* 免责声明 */}
         <Card className="p-4 rounded-3xl border-0 bg-blue-50">
           <div className="flex items-start gap-3">
             <div className="w-6 h-6 rounded-md bg-blue-500 flex items-center justify-center">
               <Info className="w-4 h-4 text-white" />
             </div>
             <div>
-              <p className="text-sm font-semibold text-blue-900 mb-1">重要提示</p>
-              <p className="text-sm text-blue-800 leading-relaxed">此报告由 AI 生成，仅供参考。如您感到持续的情绪困扰或心理压力，建议寻求专业心理咨询师的帮助。</p>
+              <p className="text-sm font-semibold text-blue-900 mb-1">{t('emotionReportDetail.noticeTitle')}</p>
+              <p className="text-sm text-blue-800 leading-relaxed">{t('emotionReportDetail.noticeDesc')}</p>
             </div>
           </div>
         </Card>

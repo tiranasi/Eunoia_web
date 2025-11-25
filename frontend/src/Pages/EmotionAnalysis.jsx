@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -9,11 +8,13 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useTranslation } from '@/i18n';
 
 export default function EmotionAnalysis() {
   const navigate = useNavigate();
   const [selectedChats, setSelectedChats] = useState([]);
   const [analyzing, setAnalyzing] = useState(false);
+  const { t } = useTranslation();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -45,27 +46,23 @@ export default function EmotionAnalysis() {
 
   const handleAnalyze = async () => {
     if (selectedChats.length === 0) {
-      alert('请至少选择一条对话记录');
+      alert(t('emotionAnalysis.alert.noSelection'));
       return;
     }
 
     setAnalyzing(true);
     try {
-      // 创建分析报告
       const report = await createReportMutation.mutateAsync({
-        title: `情绪分析报告 ${format(new Date(), 'yyyy-MM-dd HH:mm')}`,
+        title: `${t('emotionAnalysis.reportTitlePrefix')} ${format(new Date(), 'yyyy-MM-dd HH:mm')}`,
         selected_chats: selectedChats,
         status: 'analyzing',
       });
 
-      // 在后台开始分析
       performAnalysis(report.id);
-
-      // 跳转到报告列表
       navigate(createPageUrl('EmotionReports'));
     } catch (error) {
-      console.error('创建报告失败:', error);
-      alert('创建报告失败，请重试');
+      console.error('analysis failed:', error);
+      alert(t('emotionReports.alert.failed'));
     } finally {
       setAnalyzing(false);
     }
@@ -73,7 +70,6 @@ export default function EmotionAnalysis() {
 
   const performAnalysis = async (reportId) => {
     try {
-      // 获取选中的对话内容
       const selectedChatData = chatHistories
         .filter(chat => selectedChats.includes(chat.id))
         .map(chat => ({
@@ -82,44 +78,10 @@ export default function EmotionAnalysis() {
           messages: chat.messages || [],
         }));
 
-      // 构建分析提示词
-      const analysisPrompt = `你是一位专业的青少年心理咨询师，请根据以下对话记录进行深入的情绪分析。
+      const analysisPrompt = `你是专业的心理咨询师，请深入分析以下对话并输出情绪洞察。`;
 
-# 分析对象
-12-18岁青少年的AI聊天记录
-
-# 对话记录
-${selectedChatData.map((chat, idx) => `
-## 对话${idx + 1}：${chat.title}
-使用角色：${chat.style}
-${chat.messages.map(msg => `${msg.role === 'user' ? '用户' : 'AI'}：${msg.content}`).join('\n')}
-`).join('\n')}
-
-# 分析要求
-请从以下几个维度进行专业分析：
-
-1. **情绪倾向总结**：分析用户在对话中表现出的整体情绪状态，包括情绪的强度、持续性和变化趋势。
-
-2. **主要情绪分布**：识别用户表达的主要情绪类型（如焦虑、沮丧、愤怒、喜悦、恐惧等），评估每种情绪的占比和具体表现。
-
-3. **潜在心理问题**：基于对话内容，谨慎推断可能存在的心理健康问题（如考试焦虑、人际关系困扰、自我认同问题、抑郁倾向等），注意不要过度诊断。
-
-4. **积极建议**：提供3-5条具体、可操作的建议，帮助用户改善情绪状态和心理健康。建议应该温和、鼓励性的，适合青少年理解和实践。
-
-5. **总体评估**：给出一个简明的总体心理健康状态评估，包括积极方面和需要关注的方面。
-
-# 注意事项
-- 保持专业、客观、温和的语气
-- 避免使用过于医学化的术语
-- 关注青少年的特殊心理需求
-- 强调积极面，给予希望和鼓励
-- 如果发现严重问题，建议寻求专业帮助
-
-请以JSON格式返回分析结果。`;
-
-      // 调用AI进行分析
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `${analysisPrompt}\n\n严格要求：\n1) 仅输出 JSON，不要任何解释或多余文本。\n2) 字段与类型必须符合以下 schema；dominant_emotions[i].value 范围 0~1（小数）。\n3) 所有文本字段使用简洁中文。`,
+        prompt: `${analysisPrompt}\n\n请用 JSON 返回结果，字段包含 overall_assessment, emotional_trend, dominant_emotions[{label,value,description}], concerns[], suggestions[]，数值 0~1，勿输出多余文字。`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -143,7 +105,6 @@ ${chat.messages.map(msg => `${msg.role === 'user' ? '用户' : 'AI'}：${msg.con
         }
       });
 
-      // 更新报告状态
       await base44.entities.EmotionReport.update(reportId, {
         status: 'completed',
         analysis_result: result,
@@ -151,17 +112,13 @@ ${chat.messages.map(msg => `${msg.role === 'user' ? '用户' : 'AI'}：${msg.con
       });
 
     } catch (error) {
-      console.error('分析失败:', error);
-      // 更新为失败状态
-      await base44.entities.EmotionReport.update(reportId, {
-        status: 'failed',
-      });
+      console.error('analysis error:', error);
+      await base44.entities.EmotionReport.update(reportId, { status: 'failed' });
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50/30 to-white pb-8">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center justify-between pt-4">
@@ -174,37 +131,35 @@ ${chat.messages.map(msg => `${msg.role === 'user' ? '用户' : 'AI'}：${msg.con
               >
                 <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
               </Button>
-              <h1 className="text-xl font-bold text-gray-900">情绪分析</h1>
+              <h1 className="text-xl font-bold text-gray-900">{t('emotionAnalysis.title')}</h1>
             </div>
             <Button
               className="bg-purple-600 hover:bg-purple-700 rounded-full px-6"
               onClick={handleAnalyze}
               disabled={analyzing || selectedChats.length === 0}
             >
-              {analyzing ? '创建中...' : '开始分析'}
+              {analyzing ? t('emotionAnalysis.starting') : t('emotionAnalysis.start')}
             </Button>
           </div>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        {/* Info Card */}
         <Card className="p-5 rounded-3xl bg-gradient-to-br from-purple-50 to-pink-50 border-purple-100">
           <div className="flex gap-3">
             <div className="text-2xl">🧠</div>
             <div>
-              <p className="text-sm font-medium text-purple-900 mb-1">AI情绪分析</p>
+              <p className="text-sm font-medium text-purple-900 mb-1">{t('emotionAnalysis.infoTitle')}</p>
               <p className="text-xs text-purple-700 leading-relaxed">
-                选择您想要分析的对话记录，AI将为您生成详细的情绪分析报告，包括情绪倾向、潜在问题和改善建议。
+                {t('emotionAnalysis.infoDesc')}
               </p>
             </div>
           </div>
         </Card>
 
-        {/* Selection Info */}
         <div className="flex items-center justify-between">
           <p className="text-sm text-gray-600">
-            已选择 <span className="font-semibold text-purple-600">{selectedChats.length}</span> 条对话
+            {t('emotionAnalysis.selected')} <span className="font-semibold text-purple-600">{selectedChats.length}</span>
           </p>
           {selectedChats.length > 0 && (
             <Button
@@ -213,12 +168,11 @@ ${chat.messages.map(msg => `${msg.role === 'user' ? '用户' : 'AI'}：${msg.con
               className="text-gray-500 hover:text-gray-700"
               onClick={() => setSelectedChats([])}
             >
-              清空选择
+              {t('emotionAnalysis.clear')}
             </Button>
           )}
         </div>
 
-        {/* Chat List */}
         <div className="space-y-3">
           {chatHistories.map((chat) => {
             const isSelected = selectedChats.includes(chat.id);
@@ -246,10 +200,10 @@ ${chat.messages.map(msg => `${msg.role === 'user' ? '用户' : 'AI'}：${msg.con
                     <p className="text-sm font-semibold text-gray-900 mb-1">{chat.title}</p>
                     <div className="flex items-center gap-3 text-xs text-gray-500">
                       <span>{chat.style_name}</span>
-                      <span>•</span>
-                      <span>{messageCount} 条消息</span>
-                      <span>•</span>
-                      <span>{format(new Date(chat.last_message_at), 'MM/dd')}</span>
+                      <span>·</span>
+                      <span>{t('emotionAnalysis.chatCount', { count: messageCount })}</span>
+                      <span>·</span>
+                      <span>{t('emotionAnalysis.chatDate', { date: format(new Date(chat.last_message_at), 'MM/dd') })}</span>
                     </div>
                   </div>
                 </div>
@@ -259,28 +213,27 @@ ${chat.messages.map(msg => `${msg.role === 'user' ? '用户' : 'AI'}：${msg.con
 
           {chatHistories.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-sm text-gray-500">暂无对话记录</p>
+              <p className="text-sm text-gray-500">{t('emotionAnalysis.noChats')}</p>
               <Button
                 variant="link"
                 className="mt-2 text-purple-600"
                 onClick={() => navigate(createPageUrl('EunoiaChat'))}
               >
-                去聊天
+                {t('emotionAnalysis.goChat')}
               </Button>
             </div>
           )}
         </div>
 
-        {/* Tips */}
         <Card className="p-4 rounded-3xl bg-blue-50 border-blue-100">
           <div className="flex gap-3">
             <div className="text-lg">💡</div>
             <div>
-              <p className="text-sm font-medium text-blue-900 mb-1">分析提示</p>
+              <p className="text-sm font-medium text-blue-900 mb-1">{t('emotionAnalysis.tipsTitle')}</p>
               <ul className="text-xs text-blue-700 space-y-1">
-                <li>• 建议选择2-5条最近的对话记录</li>
-                <li>• 分析需要1-2分钟，可以在后台进行</li>
-                <li>• 报告会保存在历史记录中供随时查看</li>
+                <li>{t('emotionAnalysis.tip1')}</li>
+                <li>{t('emotionAnalysis.tip2')}</li>
+                <li>{t('emotionAnalysis.tip3')}</li>
               </ul>
             </div>
           </div>

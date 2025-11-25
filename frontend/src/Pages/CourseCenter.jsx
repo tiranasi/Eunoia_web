@@ -7,9 +7,11 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from '@/i18n';
 
 export default function CourseCenter() {
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -26,7 +28,6 @@ export default function CourseCenter() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50/30 to-white pb-8">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center gap-3 pt-4">
@@ -38,7 +39,7 @@ export default function CourseCenter() {
             >
               <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
             </Button>
-            <h1 className="text-xl font-bold text-gray-900">课程中心</h1>
+            <h1 className="text-xl font-bold text-gray-900">{t('courseCenter.title')}</h1>
           </div>
         </div>
       </div>
@@ -57,15 +58,15 @@ export default function CourseCenter() {
                     <img src={course.cover_image} alt={course.title} className="w-full h-full object-cover" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-4xl">
-                      📚
+                      📘
                     </div>
                   )}
                   <div className="absolute top-2 left-2">
-                    <Badge className="bg-blue-500 text-white text-xs">合作</Badge>
+                    <Badge className="bg-blue-500 text-white text-xs">{t('courseCenter.badgeFeatured')}</Badge>
                   </div>
                   {isPlusUser && (
                     <div className="absolute top-2 right-2">
-                      <Badge className="bg-amber-500 text-white text-xs">9折</Badge>
+                      <Badge className="bg-amber-500 text-white text-xs">{t('courseCenter.badgePlus')}</Badge>
                     </div>
                   )}
                 </div>
@@ -74,18 +75,18 @@ export default function CourseCenter() {
                     {course.title}
                   </h3>
                   <p className="text-xs text-gray-500 mb-2">
-                    与{course.partner_name}合作
+                    {t('courseCenter.by', { name: course.partner_name })}
                   </p>
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-xs text-gray-600">
-                      {course.total_lessons}节课程
+                      {t('courseCenter.lessons', { count: course.total_lessons })}
                     </span>
                     <span className="text-sm font-bold text-orange-600">
-                      ￥{isPlusUser ? (course.price * course.plus_discount).toFixed(0) : course.price}
+                      {t('courseCenter.price', { price: isPlusUser ? (course.price * course.plus_discount).toFixed(0) : course.price })}
                     </span>
                   </div>
                   <Badge variant="outline" className="w-full justify-center text-xs bg-teal-50 text-teal-700 border-teal-200">
-                    试看 {isPlusUser ? course.plus_trial_lessons : course.free_trial_lessons} 节
+                    {t('courseCenter.trial', { count: isPlusUser ? course.plus_trial_lessons : course.free_trial_lessons })}
                   </Badge>
                 </div>
               </Card>
@@ -96,8 +97,8 @@ export default function CourseCenter() {
             <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-100 flex items-center justify-center">
               <BookOpen className="w-10 h-10 text-blue-600" strokeWidth={1.5} />
             </div>
-            <h3 className="text-base font-semibold text-gray-900 mb-2">课程即将上线</h3>
-            <p className="text-sm text-gray-500">敬请期待更多优质心理课程</p>
+            <h3 className="text-base font-semibold text-gray-900 mb-2">{t('courseCenter.emptyTitle')}</h3>
+            <p className="text-sm text-gray-500">{t('courseCenter.emptyDesc')}</p>
           </div>
         )}
       </div>

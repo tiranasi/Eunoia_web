@@ -30,6 +30,7 @@ import Login from '@/Pages/Login';
 import Register from '@/Pages/Register';
 import Drafts from '@/Pages/Drafts';
 import Admin from '@/Pages/Admin';
+import { I18nProvider } from '@/i18n';
 
 const qc = new QueryClient();
 
@@ -103,9 +104,11 @@ function AppRoutes() {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <QueryClientProvider client={qc}>
-      <BrowserRouter>
-        <AppRoutes />
-      </BrowserRouter>
+      <I18nProvider>
+        <BrowserRouter>
+          <AppRoutes />
+        </BrowserRouter>
+      </I18nProvider>
     </QueryClientProvider>
   </React.StrictMode>
 );

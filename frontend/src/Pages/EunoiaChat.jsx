@@ -14,6 +14,7 @@ import { base44 } from '@/api/base44Client';
 import { isRenderableImage } from '@/utils/image';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useTranslation } from '@/i18n';
 
 const quickSuggestions = [
   "我感到焦虑",
@@ -80,6 +81,7 @@ const SYSTEM_PROMPTS = {
 };
 
 export default function EunoiaChat() {
+  const { t, lang } = useTranslation();
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const [currentStyle, setCurrentStyle] = useState('暖心陪伴');
@@ -208,43 +210,41 @@ export default function EunoiaChat() {
   }, [currentUser]);
 
   const getInitialGreeting = (styleNameArg) => {
-    const greetings = {
-      '暖心陪伴': '你好呀！我在这里陪伴你、倾听你。今天过得怎么样？有什么想和我分享的吗？😊',
-      '灵感火花': '嗨！很高兴见到你！✨ 今天有什么有趣的想法或者困扰吗？我们一起来探索吧！',
-      '冷静分析': '你好。我可以帮你理性地分析和解决问题。请告诉我，目前有什么需要思考的事情吗？'
-    };
     const styleKey = styleNameArg || currentStyle;
-    return greetings[styleKey] || greetings['暖心陪伴'];
+    const id = styleKey === '灵感火花' ? 'creative' : styleKey === '冷静分析' ? 'cool' : 'warm';
+    const greetKey = id === 'creative' ? 'chat.greeting.creative' : id === 'cool' ? 'chat.greeting.cool' : 'chat.greeting.warm';
+    return t(greetKey);
   };
 
   const buildSystemPrompt = () => {
     // 如果是系统预设角色
-    if (SYSTEM_PROMPTS[currentStyle]) {
-      return SYSTEM_PROMPTS[currentStyle];
+    if (['暖心陪伴','灵感火花','冷静分析'].includes(currentStyle)) {
+      const id = currentStyle === '灵感火花' ? 'creative' : currentStyle === '冷静分析' ? 'cool' : 'warm';
+      return t(`chat.systemPrompts.${id}`);
     }
     
     // 如果是用户自定义角色
     if (currentStyleData) {
-      let prompt = `你是一位AI助手，名字是"${currentStyleData.name}"。\n\n`;
+      let prompt = t('chat.customPrompt.header', { name: currentStyleData.name }) + '\n\n';
       
       if (currentStyleData.personality) {
-        prompt += `性格特点：\n${currentStyleData.personality}\n\n`;
+        prompt += t('chat.customPrompt.personality', { personality: currentStyleData.personality }) + '\n\n';
       }
       
       if (currentStyleData.background) {
-        prompt += `背景故事：\n${currentStyleData.background}\n\n`;
+        prompt += t('chat.customPrompt.background', { background: currentStyleData.background }) + '\n\n';
       }
       
       if (currentStyleData.dialogue_style) {
-        prompt += `对话方式：\n${currentStyleData.dialogue_style}\n\n`;
+        prompt += t('chat.customPrompt.dialogueStyle', { dialogue: currentStyleData.dialogue_style }) + '\n\n';
       }
       
-      prompt += `请根据以上设定与12-18岁的青少年对话，提供情感支持和建议。保持角色一致性，用温暖、真诚的方式交流。`;
+      prompt += t('chat.customPrompt.footer');
       
       return prompt;
     }
     
-    return SYSTEM_PROMPTS['暖心陪伴'];
+    return t('chat.systemPrompts.warm');
   };
 
   const handleNewChat = () => {
@@ -389,7 +389,7 @@ export default function EunoiaChat() {
     
     // Free用户每日30条限�?
     if (!isPlusUser && currentCount >= 30) {
-      if (window.confirm('今日对话次数已用完。升级Plus可享受无限对话，是否了解更多？')) {
+      if (window.confirm(t('chat.limit.exceeded.confirm'))) {
         navigate(createPageUrl('PlusSubscription')); // Navigate to Plus subscription page
       }
       return; // Stop sending message
@@ -397,13 +397,14 @@ export default function EunoiaChat() {
     
     // Plus用户每小�?0条软限制（这里简化实现为每日60条软限制�?
     if (isPlusUser && currentCount >= 60) {
-      alert('您当前使用频率较高，已进入排队状态，响应可能稍慢，请耐心等待。');
+      alert(t('chat.heavyUsage.notice'));
     }
     
     // 如果是第一次发送消息，创建对话记录
     if (!hasUserSentMessage && !currentChatId) {
+      const locale = lang === 'zh' ? 'zh-CN' : (lang === 'ja' ? 'ja-JP' : 'en-US');
       const newChat = {
-        title: `对话 ${new Date().toLocaleString('zh-CN', { month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })}`,
+        title: `${t('chat.title.prefix')} ${new Date().toLocaleString(locale, { month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric' })}`,
         style_name: currentStyle,
         style_avatar: currentAiAvatar,
         messages: [],
@@ -434,9 +435,9 @@ export default function EunoiaChat() {
         }));
       
       const systemPrompt = buildSystemPrompt();
-      const fullPrompt = `${systemPrompt}\n\n对话历史：\n${conversationHistory.map(msg => 
-        `${msg.role === 'user' ? '用户' : 'AI'}：${msg.content}`
-      ).join('\n')}\n\n请继续对话，记住保持你的角色设定。`;
+      const fullPrompt = `${systemPrompt}\n\n${t('chat.prompt.historyTitle')}\n${conversationHistory.map(msg => 
+        `${msg.role === 'user' ? t('chat.prompt.userLabel') : t('chat.prompt.aiLabel')}：${msg.content}`
+      ).join('\n')}\n\n${t('chat.prompt.continue')}`;
       
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: fullPrompt,
@@ -486,10 +487,10 @@ export default function EunoiaChat() {
       }
       
     } catch (error) {
-      console.error('AI回复失败:', error);
+      console.error('AI reply failed:', error);
       const errorMessage = {
         id: newMessages.length + 1,
-        text: '抱歉，我现在遇到了一些问题。请稍后再试，或者尝试重新表述你的问题。',
+        text: t('chat.error.general'),
         isUser: false,
         aiAvatar: currentAiAvatar,
         styleName: currentStyle,
@@ -506,7 +507,7 @@ export default function EunoiaChat() {
 
   const handleDeleteChat = async (chatId, e) => {
     e.stopPropagation();
-    if (window.confirm('确定要删除这个对话吗？')) {
+    if (window.confirm(t('chat.delete.confirm'))) {
       await deleteChatMutation.mutateAsync(chatId);
       if (currentChatId === chatId) {
         handleNewChat();
@@ -519,7 +520,7 @@ export default function EunoiaChat() {
   const today = todayDateStr();
   const resetNeeded = getDateOnly(currentUser?.daily_chat_reset_date) !== today; // 仅比较日期部分
   const currentCount = resetNeeded ? 0 : (currentUser?.daily_chat_count || 0); // 若需重置则视为 0
-  const remainingChats = isPlusUser ? '无限' : Math.max(0, 30 - currentCount);
+  const remainingChats = isPlusUser ? t('chat.usage.unlimited') : Math.max(0, 30 - currentCount);
   const showWarning = !isPlusUser && currentCount >= 25; // Show warning for free users when count is 25 or more
 
   return (
@@ -535,7 +536,7 @@ export default function EunoiaChat() {
             </SheetTrigger>
             <SheetContent side="left" className="w-80 z-50">
               <SheetHeader className="mb-4">
-                <SheetTitle>对话历史</SheetTitle>
+                <SheetTitle>{t('chat.history.title')}</SheetTitle>
               </SheetHeader>
               <div className="space-y-2">
                 {chatHistories.map((chat) => (
@@ -557,7 +558,12 @@ export default function EunoiaChat() {
                           </p>
                         </div>
                         <p className="text-xs text-gray-500">
-                          {chat.style_name} · {format(new Date(chat.last_message_at), 'MM/dd HH:mm')}
+                          {(() => {
+                            if (chat.style_name === '暖心陪伴') return t('chat.styles.warm');
+                            if (chat.style_name === '灵感火花') return t('chat.styles.creative');
+                            if (chat.style_name === '冷静分析') return t('chat.styles.cool');
+                            return chat.style_name;
+                          })()} · {format(new Date(chat.last_message_at), 'MM/dd HH:mm')}
                         </p>
                       </div>
                       <Button
@@ -651,7 +657,7 @@ export default function EunoiaChat() {
             <div className="py-2">
               <div className="bg-amber-50 border border-amber-200 rounded-2xl px-4 py-2 flex items-center justify-between">
                  <p className="text-xs text-amber-800">
-                   今日剩余 <span className="font-semibold">{remainingChats}/30</span> 次对话
+                   {t('chat.usage.remaining', { remaining: `${remainingChats}/30` })}
                  </p>
                 <Button
                   size="sm"
@@ -659,7 +665,7 @@ export default function EunoiaChat() {
                   className="text-xs text-amber-700 hover:text-amber-900 h-auto p-0"
                   onClick={() => navigate(createPageUrl('PlusSubscription'))}
                 >
-                   升级 Plus 不限次
+                   {t('chat.usage.upgradePlus')}
                  </Button>
               </div>
             </div>
@@ -667,7 +673,7 @@ export default function EunoiaChat() {
 
           {messages.length <= 2 && (
             <div className="flex gap-2 overflow-x-auto py-3 scrollbar-hide">
-              {quickSuggestions.map((suggestion, idx) => (
+              {[t('chat.quick.anxious'), t('chat.quick.study'), t('chat.quick.friendship'), t('chat.quick.lonely')].map((suggestion, idx) => (
                 <QuickChip 
                   key={idx}
                   label={suggestion}
@@ -691,7 +697,7 @@ export default function EunoiaChat() {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-                placeholder="输入消息..."
+                placeholder={t('chat.input.placeholder')}
                 className="rounded-full border-gray-200 pr-12 h-11 bg-gray-50 focus:bg-white transition-colors"
                 disabled={isAiTyping}
               />

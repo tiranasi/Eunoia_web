@@ -6,10 +6,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { base44 } from '@/api/base44Client';
 import { EyeOff, Eye, Shield, ShieldOff, RefreshCw } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 
 export default function Admin() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { t } = useTranslation();
 
   const { data: stats } = useQuery({ queryKey: ['adminStats'], queryFn: () => base44.admin.stats() });
   const { data: posts = [] } = useQuery({ queryKey: ['adminPosts'], queryFn: () => base44.admin.listPosts({ order: '-created_at', limit: 50 }) });
@@ -40,42 +42,40 @@ export default function Admin() {
       <div className="bg-white border-b border-gray-100 sticky top-0 z-30">
         <div className="max-w-5xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Admin Control</h1>
-            <p className="text-sm text-gray-500">帖子 / 角色 / 用户 / 数据看板</p>
+            <h1 className="text-2xl font-bold text-gray-900">{t('admin.title')}</h1>
+            <p className="text-sm text-gray-500">{t('admin.subtitle')}</p>
           </div>
           <Button variant="outline" size="sm" className="rounded-full" onClick={() => navigate(createPageUrl('EunoiaHome'))}>
-            返回用户端
+            {t('admin.back')}
           </Button>
         </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-6 space-y-6">
-        {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <Card className="p-4 rounded-2xl shadow-sm border-0">
-            <p className="text-xs text-gray-500">用户数</p>
+            <p className="text-xs text-gray-500">{t('admin.stats.users')}</p>
             <p className="text-2xl font-bold text-gray-900">{stats?.user_count ?? '-'}</p>
           </Card>
           <Card className="p-4 rounded-2xl shadow-sm border-0">
-            <p className="text-xs text-gray-500">帖子总数</p>
+            <p className="text-xs text-gray-500">{t('admin.stats.posts')}</p>
             <p className="text-2xl font-bold text-gray-900">{stats?.post_count ?? '-'}</p>
           </Card>
           <Card className="p-4 rounded-2xl shadow-sm border-0">
-            <p className="text-xs text-gray-500">对话记录</p>
+            <p className="text-xs text-gray-500">{t('admin.stats.chats')}</p>
             <p className="text-2xl font-bold text-gray-900">{stats?.chat_history_count ?? '-'}</p>
           </Card>
           <Card className="p-4 rounded-2xl shadow-sm border-0">
-            <p className="text-xs text-gray-500">今日对话</p>
+            <p className="text-xs text-gray-500">{t('admin.stats.todayChats')}</p>
             <p className="text-2xl font-bold text-gray-900">{stats?.today_chat_histories ?? '-'}</p>
           </Card>
         </div>
 
-        {/* Posts */}
         <Card className="p-4 rounded-2xl shadow-sm border-0">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">帖子管理</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('admin.posts.title')}</h2>
             <Button variant="ghost" size="sm" onClick={() => qc.invalidateQueries(['adminPosts'])}>
-              <RefreshCw className="w-4 h-4 mr-2" strokeWidth={2} /> 刷新
+              <RefreshCw className="w-4 h-4 mr-2" strokeWidth={2} /> {t('admin.refresh')}
             </Button>
           </div>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
@@ -93,20 +93,19 @@ export default function Admin() {
                   disabled={updatePost.isLoading}
                 >
                   {post.admin_hidden ? <Eye className="w-4 h-4 mr-1" /> : <EyeOff className="w-4 h-4 mr-1" />}
-                  {post.admin_hidden ? '显示' : '隐藏'}
+                  {post.admin_hidden ? t('admin.posts.unhide') : t('admin.posts.hide')}
                 </Button>
               </div>
             ))}
-            {posts.length === 0 && <p className="text-sm text-gray-500 text-center py-4">暂无帖子</p>}
+            {posts.length === 0 && <p className="text-sm text-gray-500 text-center py-4">{t('admin.posts.empty')}</p>}
           </div>
         </Card>
 
-        {/* Styles */}
         <Card className="p-4 rounded-2xl shadow-sm border-0">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">角色管理</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('admin.styles.title')}</h2>
             <Button variant="ghost" size="sm" onClick={() => qc.invalidateQueries(['adminStyles'])}>
-              <RefreshCw className="w-4 h-4 mr-2" strokeWidth={2} /> 刷新
+              <RefreshCw className="w-4 h-4 mr-2" strokeWidth={2} /> {t('admin.refresh')}
             </Button>
           </div>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
@@ -124,20 +123,19 @@ export default function Admin() {
                   disabled={updateStyle.isLoading}
                 >
                   {style.is_deleted_by_author ? <Shield className="w-4 h-4 mr-1" /> : <ShieldOff className="w-4 h-4 mr-1" />}
-                  {style.is_deleted_by_author ? '恢复' : '禁用'}
+                  {style.is_deleted_by_author ? t('admin.styles.restore') : t('admin.styles.remove')}
                 </Button>
               </div>
             ))}
-            {styles.length === 0 && <p className="text-sm text-gray-500 text-center py-4">暂无角色</p>}
+            {styles.length === 0 && <p className="text-sm text-gray-500 text-center py-4">{t('admin.styles.empty')}</p>}
           </div>
         </Card>
 
-        {/* Users */}
         <Card className="p-4 rounded-2xl shadow-sm border-0">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-lg font-semibold text-gray-900">用户管理</h2>
+            <h2 className="text-lg font-semibold text-gray-900">{t('admin.users.title')}</h2>
             <Button variant="ghost" size="sm" onClick={() => qc.invalidateQueries(['adminUsers'])}>
-              <RefreshCw className="w-4 h-4 mr-2" strokeWidth={2} /> 刷新
+              <RefreshCw className="w-4 h-4 mr-2" strokeWidth={2} /> {t('admin.refresh')}
             </Button>
           </div>
           <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
@@ -145,7 +143,7 @@ export default function Admin() {
               <div key={u.id} className="p-3 rounded-xl border border-gray-100 flex items-center justify-between bg-white">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-900 truncate">{u.email}</p>
-                  <p className="text-xs text-gray-500">角色: {u.role || 'user'} · 状态: {u.subscription_tier}</p>
+                  <p className="text-xs text-gray-500">{t('admin.users.info', { role: u.role || 'user', status: u.subscription_tier })}</p>
                 </div>
                 <Button
                   size="sm"
@@ -154,11 +152,11 @@ export default function Admin() {
                   onClick={() => toggleUser(u)}
                   disabled={updateUser.isLoading}
                 >
-                  {u.subscription_tier === 'banned' ? '解禁' : '禁用'}
+                  {u.subscription_tier === 'banned' ? t('admin.users.unban') : t('admin.users.ban')}
                 </Button>
               </div>
             ))}
-            {users.length === 0 && <p className="text-sm text-gray-500 text-center py-4">暂无用户</p>}
+            {users.length === 0 && <p className="text-sm text-gray-500 text-center py-4">{t('admin.users.empty')}</p>}
           </div>
         </Card>
       </div>

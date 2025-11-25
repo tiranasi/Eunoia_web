@@ -9,13 +9,15 @@ import { Card } from '@/components/ui/card';
 import { base44 } from '@/api/base44Client';
 import { isRenderableImage } from '@/utils/image';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from '@/i18n';
 
-const emojiOptions = ['😊', '🌸', '📚', '🎨', '🌟', '🎵', '🦋', '🌈', '☕', '🌙', '🐱', '🎭'];
+const emojiOptions = ['😊', '🌟', '💫', '🧠', '💖', '🎧', '📚', '☀️', '🌙', '⭐', '🎨', '🦊'];
 
 export default function CreateStyle() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const editId = searchParams.get('id');
+  const { t } = useTranslation();
   
   const [formData, setFormData] = useState({
     name: '',
@@ -24,11 +26,10 @@ export default function CreateStyle() {
     background: '',
     dialogue_style: '',
   });
-  const [avatarType, setAvatarType] = useState('emoji'); // 'emoji' or 'image'
+  const [avatarType, setAvatarType] = useState('emoji');
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
 
-  // Load existing style if editing
   const { data: existingStyle } = useQuery({
     queryKey: ['chatStyle', editId],
     queryFn: async () => {
@@ -64,8 +65,8 @@ export default function CreateStyle() {
       setFormData({ ...formData, avatar: file_url });
       setAvatarType('image');
     } catch (error) {
-      console.error('上传失败:', error);
-      alert('上传失败，请重试');
+      console.error('upload failed:', error);
+      alert(t('createStyle.error.upload'));
     } finally {
       setUploading(false);
     }
@@ -73,7 +74,7 @@ export default function CreateStyle() {
 
   const handleSubmit = async () => {
     if (!formData.name.trim() || !formData.personality.trim()) {
-      alert('请填写角色名称和性格特点');
+      alert(t('createStyle.error.missing'));
       return;
     }
 
@@ -86,8 +87,8 @@ export default function CreateStyle() {
       }
       navigate(-1);
     } catch (error) {
-      console.error('保存失败:', error);
-      alert('保存失败，请重试');
+      console.error('save failed:', error);
+      alert(t('createStyle.error.upload'));
     } finally {
       setSaving(false);
     }
@@ -95,7 +96,6 @@ export default function CreateStyle() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50/30 to-white pb-8">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center justify-between pt-4">
@@ -109,7 +109,7 @@ export default function CreateStyle() {
                 <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
               </Button>
               <h1 className="text-xl font-bold text-gray-900">
-                {editId ? '编辑风格' : '创建自定义风格'}
+                {editId ? t('createStyle.titleEdit') : t('createStyle.titleCreate')}
               </h1>
             </div>
             <Button
@@ -117,16 +117,15 @@ export default function CreateStyle() {
               onClick={handleSubmit}
               disabled={saving}
             >
-              {saving ? '保存中...' : '保存'}
+              {saving ? t('createStyle.saving') : t('createStyle.save')}
             </Button>
           </div>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        {/* Avatar Selection */}
         <Card className="p-6 rounded-3xl shadow-sm border-0">
-          <Label className="text-sm font-semibold text-gray-900 mb-4 block">角色头像</Label>
+          <Label className="text-sm font-semibold text-gray-900 mb-4 block">{t('createStyle.avatarLabel')}</Label>
           
           <div className="flex gap-4 mb-4">
             <Button
@@ -134,7 +133,7 @@ export default function CreateStyle() {
               className="flex-1 rounded-2xl inline-flex items-center justify-center gap-2"
               onClick={() => setAvatarType('emoji')}
             >
-              😊 Emoji
+              {t('createStyle.avatarEmoji')}
             </Button>
             <Button
               variant={avatarType === 'image' ? 'default' : 'outline'}
@@ -142,7 +141,7 @@ export default function CreateStyle() {
               onClick={() => setAvatarType('image')}
             >
               <ImageIcon className="w-4 h-4 mr-2" />
-              上传图片
+              {t('createStyle.avatarImage')}
             </Button>
           </div>
 
@@ -177,14 +176,14 @@ export default function CreateStyle() {
                     className="absolute bottom-0 right-0 rounded-full inline-flex items-center justify-center"
                     onClick={() => document.getElementById('avatar-upload')?.click()}
                   >
-                    更换
+                    {t('createStyle.avatarChange')}
                   </Button>
                 </div>
               ) : (
                 <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-3xl cursor-pointer hover:border-teal-500 transition-colors">
                   <Upload className="w-8 h-8 text-gray-400 mb-2" />
                   <p className="text-sm text-gray-500">
-                    {uploading ? '上传中...' : '点击上传头像'}
+                    {uploading ? t('createStyle.uploading') : t('createStyle.avatarImage')}
                   </p>
                   <input
                     id="avatar-upload"
@@ -210,17 +209,16 @@ export default function CreateStyle() {
           )}
         </Card>
 
-        {/* Basic Info */}
         <Card className="p-6 rounded-3xl shadow-sm border-0 space-y-4">
           <div>
             <Label htmlFor="name" className="text-sm font-semibold text-gray-900 mb-2 block">
-              角色名称 <span className="text-red-500">*</span>
+              {t('createStyle.nameLabel')} <span className="text-red-500">*</span>
             </Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              placeholder="给你的AI助手起个名字"
+              placeholder={t('createStyle.namePlaceholder')}
               className="rounded-2xl h-11"
               maxLength={20}
             />
@@ -229,13 +227,13 @@ export default function CreateStyle() {
 
           <div>
             <Label htmlFor="personality" className="text-sm font-semibold text-gray-900 mb-2 block">
-              性格特点 <span className="text-red-500">*</span>
+              {t('createStyle.personalityLabel')} <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id="personality"
               value={formData.personality}
               onChange={(e) => setFormData({ ...formData, personality: e.target.value })}
-              placeholder="例如：温柔体贴、善于倾听、充满耐心..."
+              placeholder={t('createStyle.personalityPlaceholder')}
               className="rounded-2xl min-h-[100px] resize-none"
               maxLength={200}
             />
@@ -243,19 +241,18 @@ export default function CreateStyle() {
           </div>
         </Card>
 
-        {/* Advanced Settings */}
         <Card className="p-6 rounded-3xl shadow-sm border-0 space-y-4">
-          <h3 className="text-sm font-semibold text-gray-900">高级设置（可选）</h3>
+          <h3 className="text-sm font-semibold text-gray-900">{t('createStyle.advancedTitle')}</h3>
           
           <div>
             <Label htmlFor="background" className="text-sm font-medium text-gray-700 mb-2 block">
-              背景故事
+              {t('createStyle.backgroundLabel')}
             </Label>
             <Textarea
               id="background"
               value={formData.background}
               onChange={(e) => setFormData({ ...formData, background: e.target.value })}
-              placeholder="描述角色的背景、经历、专长等..."
+              placeholder={t('createStyle.backgroundPlaceholder')}
               className="rounded-2xl min-h-[120px] resize-none"
               maxLength={500}
             />
@@ -264,13 +261,13 @@ export default function CreateStyle() {
 
           <div>
             <Label htmlFor="dialogue_style" className="text-sm font-medium text-gray-700 mb-2 block">
-              对话方式
+              {t('createStyle.dialogueLabel')}
             </Label>
             <Textarea
               id="dialogue_style"
               value={formData.dialogue_style}
               onChange={(e) => setFormData({ ...formData, dialogue_style: e.target.value })}
-              placeholder="例如：使用简短温暖的语句、喜欢用表情符号、会引用名言..."
+              placeholder={t('createStyle.dialoguePlaceholder')}
               className="rounded-2xl min-h-[100px] resize-none"
               maxLength={300}
             />
@@ -278,14 +275,13 @@ export default function CreateStyle() {
           </div>
         </Card>
 
-        {/* Tips */}
         <Card className="p-4 rounded-3xl bg-teal-50 border-teal-100">
           <div className="flex gap-3">
-            <div className="text-xl">💡</div>
+            <div className="text-xl">ℹ️</div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-teal-900 mb-1">创建提示</p>
+              <p className="text-sm font-medium text-teal-900 mb-1">{t('createStyle.tipsTitle')}</p>
               <p className="text-xs text-teal-700 leading-relaxed">
-                详细的性格描述和背景故事能让AI更好地理解角色定位，提供更个性化的对话体验。
+                {t('createStyle.tipsDesc')}
               </p>
             </div>
           </div>

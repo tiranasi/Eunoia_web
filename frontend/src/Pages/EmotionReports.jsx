@@ -9,18 +9,20 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { base44 } from '@/api/base44Client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { format } from 'date-fns';
+import { useTranslation } from '@/i18n';
 
-const statusConfig = {
-  pending: { label: '待分析', color: 'bg-gray-100 text-gray-700', icon: Clock },
-  analyzing: { label: '分析中', color: 'bg-blue-100 text-blue-700', icon: Clock },
-  completed: { label: '已完成', color: 'bg-green-100 text-green-700', icon: CheckCircle },
-  failed: { label: '分析失败', color: 'bg-red-100 text-red-700', icon: AlertCircle },
-};
+const statusConfig = (t) => ({
+  pending: { label: t('emotionReports.status.pending'), color: 'bg-gray-100 text-gray-700', icon: Clock },
+  analyzing: { label: t('emotionReports.status.analyzing'), color: 'bg-blue-100 text-blue-700', icon: Clock },
+  completed: { label: t('emotionReports.status.completed'), color: 'bg-green-100 text-green-700', icon: CheckCircle },
+  failed: { label: t('emotionReports.status.failed'), color: 'bg-red-100 text-red-700', icon: AlertCircle },
+});
 
 export default function EmotionReports() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState('reports');
+  const { t } = useTranslation();
 
   const { data: user } = useQuery({ queryKey: ['currentUser'], queryFn: () => base44.auth.me() });
 
@@ -66,9 +68,9 @@ export default function EmotionReports() {
     if (report.status === 'completed') {
       navigate(createPageUrl('EmotionReportDetail') + '?id=' + report.id);
     } else if (report.status === 'analyzing') {
-      alert('报告正在分析中，请稍后...');
+      alert(t('emotionReports.alert.analyzing'));
     } else if (report.status === 'failed') {
-      alert('报告分析失败，请重试');
+      alert(t('emotionReports.alert.failed'));
     }
   };
 
@@ -76,22 +78,22 @@ export default function EmotionReports() {
     if (trend.status === 'completed') {
       navigate(createPageUrl('TrendAnalysisDetail') + '?id=' + trend.id);
     } else if (trend.status === 'analyzing') {
-      alert('趋势分析正在进行中，请稍后...');
+      alert(t('emotionReports.trend.analyzing'));
     } else if (trend.status === 'failed') {
-      alert('趋势分析失败，请重试');
+      alert(t('emotionReports.trend.failed'));
     }
   };
 
   const handleDeleteReport = async (reportId, e) => {
     e.stopPropagation();
-    if (window.confirm('确定要删除这份报告吗？')) {
+    if (window.confirm(t('emotionReports.deleteReportConfirm'))) {
       await deleteReportMutation.mutateAsync(reportId);
     }
   };
 
   const handleDeleteTrend = async (trendId, e) => {
     e.stopPropagation();
-    if (window.confirm('确定要删除这份趋势分析吗？')) {
+    if (window.confirm(t('emotionReports.deleteTrendConfirm'))) {
       await deleteTrendMutation.mutateAsync(trendId);
     }
   };
@@ -99,7 +101,7 @@ export default function EmotionReports() {
   const handleTrendAnalysisClick = () => {
     const isPlusUser = user?.subscription_tier === 'plus';
     if (!isPlusUser) {
-      if (window.confirm('趋势分析是 Plus 会员专属功能。\n\n自动汇总最近 5 份报告并给出建议。\n\n是否升级 Plus 会员？')) {
+      if (window.confirm(t('emotionReports.plusConfirm'))) {
         navigate(createPageUrl('PlusSubscription'));
       }
     } else {
@@ -117,7 +119,7 @@ export default function EmotionReports() {
     if (canCreate) {
       navigate(createPageUrl('EmotionAnalysis'));
     } else {
-      if (window.confirm('今日分析次数已用完。升级 Plus 可无限次分析，是否了解更多？')) {
+      if (window.confirm(t('emotionReports.plusConfirm'))) {
         navigate(createPageUrl('PlusSubscription'));
       }
     }
@@ -127,10 +129,10 @@ export default function EmotionReports() {
   const today = new Date().toISOString().split('T')[0];
   const resetNeeded = user?.daily_report_reset_date !== today;
   const currentReportCount = resetNeeded ? 0 : (user?.daily_report_count || 0);
+  const sc = statusConfig(t);
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-purple-50/30 to-white pb-8">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center justify-between pt-4">
@@ -138,12 +140,12 @@ export default function EmotionReports() {
               <Button variant="ghost" size="icon" className="rounded-full" onClick={() => navigate(createPageUrl('EunoiaMe'))}>
                 <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
               </Button>
-              <h1 className="text-xl font-bold text-gray-900">情绪分析中心</h1>
+              <h1 className="text-xl font-bold text-gray-900">{t('emotionReports.title')}</h1>
             </div>
             {activeTab === 'reports' && (
               <div className="flex items-center gap-2">
                 {!isPlusUser && (
-                  <Badge variant="outline" className="text-xs">今日 {currentReportCount}/1</Badge>
+                  <Badge variant="outline" className="text-xs">{t('emotionReports.dailyCount', { count: currentReportCount })}</Badge>
                 )}
                 <Button size="icon" className="rounded-full bg-purple-600 hover:bg-purple-700 flex items-center justify-center" onClick={handleCreateReport}>
                   <Plus className="w-5 h-5" strokeWidth={2} />
@@ -157,21 +159,20 @@ export default function EmotionReports() {
       <div className="max-w-lg mx-auto px-4 py-6">
         <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
           <TabsList className="w-full bg-gray-100 p-1 rounded-2xl">
-            <TabsTrigger value="reports" className="flex-1 rounded-xl data-[state=active]:bg-white data-[state=active]:text-gray-900">情绪报告</TabsTrigger>
+            <TabsTrigger value="reports" className="flex-1 rounded-xl data-[state=active]:bg-white data-[state=active]:text-gray-900">{t('emotionReports.tab.reports')}</TabsTrigger>
             <TabsTrigger value="trends" className="flex-1 rounded-xl data-[state=active]:bg-white data-[state=active]:text-gray-900">
               <span className="inline-flex items-center justify-center gap-1">
-                趋势分析
+                {t('emotionReports.tab.trends')}
                 {!isPlusUser && <Lock className="w-3 h-3 text-amber-600" strokeWidth={2} />}
               </span>
             </TabsTrigger>
           </TabsList>
 
-          {/* Reports Tab */}
           <TabsContent value="reports" className="mt-6">
             {reports.length > 0 ? (
               <div className="space-y-3">
                 {reports.map((report) => {
-                  const status = statusConfig[report.status] || statusConfig.pending;
+                  const status = sc[report.status] || sc.pending;
                   const StatusIcon = status.icon;
                   const isNew = report.status === 'completed' && !report.is_viewed && report.analyzed_at && new Date(report.analyzed_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
@@ -189,7 +190,7 @@ export default function EmotionReports() {
                           <div className="flex items-start justify-between mb-2">
                             <h3 className="text-sm font-semibold text-gray-900 line-clamp-1 flex-1">{report.title}</h3>
                             <div className="flex items-center gap-2 ml-2">
-                              {isNew && <Badge className="bg-pink-500 text-white text-xs flex-shrink-0">New</Badge>}
+                              {isNew && <Badge className="bg-pink-500 text-white text-xs flex-shrink-0">{t('emotionReports.newBadge')}</Badge>}
                               <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity h-8 w-8 flex-shrink-0" onClick={(e) => handleDeleteReport(report.id, e)}>
                                 <Trash2 className="w-4 h-4 text-red-500" strokeWidth={1.5} />
                               </Button>
@@ -200,10 +201,10 @@ export default function EmotionReports() {
                               <StatusIcon className="w-3 h-3" strokeWidth={2} />
                               {status.label}
                             </Badge>
-                            <span className="text-xs text-gray-500">{report.selected_chats?.length || 0} 条对话</span>
+                            <span className="text-xs text-gray-500">{t('emotionReports.chatCount', { count: report.selected_chats?.length || 0 })}</span>
                           </div>
                           <p className="text-xs text-gray-500">{format(new Date(report.created_at), 'yyyy-MM-dd HH:mm')}</p>
-                          {report.status === 'completed' && <p className="text-xs text-teal-600 mt-1">点击查看详情 →</p>}
+                          {report.status === 'completed' && <p className="text-xs text-teal-600 mt-1">{t('emotionReports.viewHint')}</p>}
                         </div>
                       </div>
                     </Card>
@@ -215,25 +216,24 @@ export default function EmotionReports() {
                 <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-purple-100 flex items-center justify-center">
                   <FileText className="w-10 h-10 text-purple-600" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-base font-semibold text-gray-900 mb-2">暂无分析报告</h3>
-                <p className="text-sm text-gray-500 mb-6">开始您的第一次情绪分析吧</p>
+                <h3 className="text-base font-semibold text-gray-900 mb-2">{t('emotionReports.empty.title')}</h3>
+                <p className="text-sm text-gray-500 mb-6">{t('emotionReports.empty.desc')}</p>
                 <Button className="bg-purple-600 hover:bg-purple-700 rounded-full px-6 inline-flex items-center justify-center" onClick={handleCreateReport}>
-                  <Plus className="w-5 h-5 mr-2" strokeWidth={2} />创建分析
+                  <Plus className="w-5 h-5 mr-2" strokeWidth={2} />{t('emotionReports.empty.button')}
                 </Button>
               </div>
             )}
           </TabsContent>
 
-          {/* Trends Tab */}
           <TabsContent value="trends" className="mt-6">
             {isPlusUser ? (
               trendAnalyses.length > 0 ? (
                 <div className="space-y-3">
                   <Button className="w-full bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-2xl h-12 font-medium mb-4 inline-flex items-center justify-center" onClick={handleTrendAnalysisClick}>
-                    <Plus className="w-5 h-5 mr-2" strokeWidth={2} />创建趋势分析
+                    <Plus className="w-5 h-5 mr-2" strokeWidth={2} />{t('emotionReports.trend.button')}
                   </Button>
                   {trendAnalyses.map((trend) => {
-                    const status = statusConfig[trend.status] || statusConfig.pending;
+                    const status = sc[trend.status] || sc.pending;
                     const StatusIcon = status.icon;
                     return (
                       <Card
@@ -257,10 +257,10 @@ export default function EmotionReports() {
                                 <StatusIcon className="w-3 h-3" strokeWidth={2} />
                                 {status.label}
                               </Badge>
-                              <span className="text-xs text-gray-500">{trend.selected_reports?.length || 0} 份报告</span>
+                              <span className="text-xs text-gray-500">{t('emotionReports.trend.reportCount', { count: trend.selected_reports?.length || 0 })}</span>
                             </div>
                             <p className="text-xs text-gray-500">{format(new Date(trend.created_at), 'yyyy-MM-dd HH:mm')}</p>
-                            {trend.status === 'completed' && <p className="text-xs text-purple-600 mt-1">点击查看详情 →</p>}
+                            {trend.status === 'completed' && <p className="text-xs text-purple-600 mt-1">{t('emotionReports.viewHint')}</p>}
                           </div>
                         </div>
                       </Card>
@@ -272,10 +272,10 @@ export default function EmotionReports() {
                   <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-indigo-100 flex items-center justify-center">
                     <TrendingUp className="w-10 h-10 text-indigo-600" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-base font-semibold text-gray-900 mb-2">暂无趋势分析</h3>
-                  <p className="text-sm text-gray-500 mb-6">至少需要 5 份报告才能创建趋势分析</p>
+                  <h3 className="text-base font-semibold text-gray-900 mb-2">{t('emotionReports.trend.empty.title')}</h3>
+                  <p className="text-sm text-gray-500 mb-6">{t('emotionReports.trend.empty.desc')}</p>
                   <Button className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 rounded-full px-6 inline-flex items-center justify-center" onClick={handleTrendAnalysisClick} disabled={reports.filter((r) => r.status === 'completed').length < 5}>
-                    <Plus className="w-5 h-5 mr-2" strokeWidth={2} />创建趋势分析
+                    <Plus className="w-5 h-5 mr-2" strokeWidth={2} />{t('emotionReports.trend.button')}
                   </Button>
                 </div>
               )
@@ -285,10 +285,10 @@ export default function EmotionReports() {
                   <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-white flex items-center justify-center">
                     <Lock className="w-8 h-8 text-amber-600" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-2">解锁趋势分析</h3>
-                  <p className="text-sm text-gray-700 mb-4">自动汇总最近 5 份报告并给出建议</p>
+                  <h3 className="text-lg font-bold text-gray-900 mb-2">{t('emotionReports.trend.lock.title')}</h3>
+                  <p className="text-sm text-gray-700 mb-4">{t('emotionReports.trend.lock.desc')}</p>
                   <Button className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white rounded-full px-8 h-11 font-semibold inline-flex items-center justify-center" onClick={() => navigate(createPageUrl('PlusSubscription'))}>
-                    开通 Plus
+                    {t('emotionReports.trend.lock.cta')}
                   </Button>
                 </div>
               </Card>
@@ -299,4 +299,3 @@ export default function EmotionReports() {
     </div>
   );
 }
-

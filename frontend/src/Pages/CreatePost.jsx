@@ -1,4 +1,3 @@
-
 import React, { useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -12,12 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { base44 } from '@/api/base44Client';
 import { useQuery } from '@tanstack/react-query';
 import { isRenderableImage } from '@/utils/image';
+import { useTranslation } from '@/i18n';
 
 const categories = [
-  { id: 'AI Relief', name: 'AI Relief', color: 'bg-teal-100 text-teal-700 border-teal-300' },
-  { id: 'Treehole', name: 'Treehole', color: 'bg-pink-100 text-pink-700 border-pink-300' },
-  { id: 'Support Center', name: 'Support Center', color: 'bg-blue-100 text-blue-700 border-blue-300' },
-  { id: 'Challenges', name: 'Challenges', color: 'bg-purple-100 text-purple-700 border-purple-300' },
+  { id: 'AI Relief', labelKey: 'square.categories.ai', color: 'bg-teal-100 text-teal-700 border-teal-300' },
+  { id: 'Treehole', labelKey: 'square.categories.treehole', color: 'bg-pink-100 text-pink-700 border-pink-300' },
+  { id: 'Support Center', labelKey: 'square.categories.support', color: 'bg-blue-100 text-blue-700 border-blue-300' },
+  { id: 'Challenges', labelKey: 'square.categories.challenges', color: 'bg-purple-100 text-purple-700 border-purple-300' },
 ];
 
 export default function CreatePost() {
@@ -34,6 +34,7 @@ export default function CreatePost() {
     shared_style_id: '',
   });
   const [tagInput, setTagInput] = useState('');
+  const { t } = useTranslation();
 
   const { data: user } = useQuery({
     queryKey: ['currentUser'],
@@ -62,8 +63,8 @@ export default function CreatePost() {
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
       setFormData({ ...formData, image_url: file_url });
     } catch (error) {
-      console.error('上传失败:', error);
-      alert('上传失败，请重试');
+      console.error('upload failed:', error);
+      alert(t('createPost.error.upload'));
     } finally {
       setUploading(false);
     }
@@ -88,13 +89,12 @@ export default function CreatePost() {
 
   const handlePublish = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
-      alert('请填写标题和内容');
+      alert(t('createPost.error.missing'));
       return;
     }
 
-    // AI Relief分区必须选择要分享的角色
     if (formData.category === 'AI Relief' && !formData.shared_style_id) {
-      alert('发布到AI Relief分区必须分享一个自定义角色');
+      alert(t('createPost.error.needStyle'));
       return;
     }
 
@@ -102,7 +102,6 @@ export default function CreatePost() {
     try {
       let postData = { ...formData };
       
-      // 如果是AI Relief，添加角色数据快照
       if (formData.category === 'AI Relief' && formData.shared_style_id) {
         const selectedStyle = myStyles.find(s => s.id === formData.shared_style_id);
         if (selectedStyle) {
@@ -112,7 +111,7 @@ export default function CreatePost() {
             personality: selectedStyle.personality,
             background: selectedStyle.background || '',
             dialogue_style: selectedStyle.dialogue_style || '',
-            author_name: user?.nickname || user?.full_name || '匿名',
+            author_name: user?.nickname || user?.full_name || t('me.displayNameFallback'),
             author_email: user?.email,
           };
         }
@@ -121,8 +120,8 @@ export default function CreatePost() {
       await base44.entities.Post.create(postData);
       navigate(createPageUrl('EunoiaSquare'));
     } catch (error) {
-      console.error('发布失败:', error);
-      alert('发布失败，请重试');
+      console.error('publish failed:', error);
+      alert(t('createPost.error.publish'));
     } finally {
       setPublishing(false);
     }
@@ -130,7 +129,6 @@ export default function CreatePost() {
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-teal-50/30 to-white pb-8">
-      {/* Header */}
       <div className="bg-white border-b border-gray-100 sticky top-0 z-10">
         <div className="max-w-lg mx-auto px-4 pt-safe pb-4">
           <div className="flex items-center justify-between pt-4">
@@ -143,23 +141,22 @@ export default function CreatePost() {
               >
                 <ArrowLeft className="w-5 h-5" strokeWidth={1.5} />
               </Button>
-              <h1 className="text-xl font-bold text-gray-900">发布帖子</h1>
+              <h1 className="text-xl font-bold text-gray-900">{t('createPost.title')}</h1>
             </div>
             <Button
               className="bg-teal-500 hover:bg-teal-600 rounded-full px-6 flex items-center justify-center"
               onClick={handlePublish}
               disabled={publishing}
             >
-              {publishing ? '发布中...' : '发布'}
+              {publishing ? t('createPost.publishing') : t('createPost.publish')}
             </Button>
           </div>
         </div>
       </div>
 
       <div className="max-w-lg mx-auto px-4 py-6 space-y-6">
-        {/* Category Selection */}
         <Card className="p-6 rounded-3xl shadow-sm border-0">
-          <Label className="text-sm font-semibold text-gray-900 mb-4 block">选择分区</Label>
+          <Label className="text-sm font-semibold text-gray-900 mb-4 block">{t('createPost.category')}</Label>
           <div className="grid grid-cols-2 gap-3">
             {categories.map((cat) => (
               <button
@@ -171,13 +168,12 @@ export default function CreatePost() {
                 }`}
                 onClick={() => setFormData({ ...formData, category: cat.id, shared_style_id: '' })}
               >
-                {cat.name}
+                {t(cat.labelKey)}
               </button>
             ))}
           </div>
         </Card>
 
-        {/* AI Relief - Style Selection */}
         {formData.category === 'AI Relief' && (
           <Card className="p-6 rounded-3xl shadow-sm border-0 bg-gradient-to-br from-teal-50 to-teal-100">
             <div className="flex items-start gap-3 mb-4">
@@ -185,19 +181,19 @@ export default function CreatePost() {
                 <Sparkles className="w-5 h-5 text-white" strokeWidth={1.5} />
               </div>
               <div className="flex-1">
-                <h3 className="text-sm font-semibold text-gray-900 mb-1">分享你的AI角色</h3>
-                <p className="text-xs text-gray-600">选择一个自定义角色分享给社区，帮助其他人获得情感支持</p>
+                <h3 className="text-sm font-semibold text-gray-900 mb-1">{t('createPost.aiStyleTitle')}</h3>
+                <p className="text-xs text-gray-600">{t('createPost.aiStyleDesc')}</p>
               </div>
             </div>
             
             {myStyles.length > 0 ? (
               <div>
                 <Label className="text-sm font-medium text-gray-900 mb-2 block">
-                  选择角色 <span className="text-red-500">*</span>
+                  {t('createPost.selectStyle')} <span className="text-red-500">*</span>
                 </Label>
                 <Select value={String(formData.shared_style_id || '')} onValueChange={(value) => setFormData({ ...formData, shared_style_id: Number(value) })}>
                   <SelectTrigger className="rounded-2xl h-11 bg-white">
-                    <SelectValue placeholder="选择要分享的角色" />
+                    <SelectValue placeholder={t('createPost.selectStyle')} />
                   </SelectTrigger>
                   <SelectContent>
                     {myStyles.map((style) => (
@@ -206,7 +202,7 @@ export default function CreatePost() {
                           {isRenderableImage(style.avatar) ? (
                             <img src={style.avatar} alt="" className="w-6 h-6 rounded-full object-cover" />
                           ) : (
-                            <span className="text-lg">{style.avatar || '😊'}</span>
+                            <span className="text-lg">{style.avatar || '🤖'}</span>
                           )}
                           <span>{style.name}</span>
                         </div>
@@ -217,55 +213,52 @@ export default function CreatePost() {
               </div>
             ) : (
               <div className="text-center py-4">
-                <p className="text-sm text-gray-600 mb-3">你还没有创建自定义角色</p>
+                <p className="text-sm text-gray-600 mb-3">{t('createPost.noStyle')}</p>
                 <Button
                   size="sm"
                   className="bg-teal-500 hover:bg-teal-600 rounded-full flex items-center justify-center mx-auto"
                   onClick={() => navigate(createPageUrl('CreateStyle'))}
                 >
-                  创建角色
+                  {t('createPost.createStyle')}
                 </Button>
               </div>
             )}
           </Card>
         )}
 
-        {/* Title */}
         <Card className="p-6 rounded-3xl shadow-sm border-0">
           <Label htmlFor="title" className="text-sm font-semibold text-gray-900 mb-3 block">
-            标题
+            {t('createPost.titleLabel')}
           </Label>
           <Input
             id="title"
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-            placeholder="给你的帖子起个标题..."
+            placeholder={t('createPost.titlePlaceholder')}
             className="rounded-2xl h-11 text-base"
             maxLength={100}
           />
           <p className="text-xs text-gray-500 mt-2">{formData.title.length}/100</p>
         </Card>
 
-        {/* Content */}
         <Card className="p-6 rounded-3xl shadow-sm border-0">
           <Label htmlFor="content" className="text-sm font-semibold text-gray-900 mb-3 block">
-            内容
+            {t('createPost.contentLabel')}
           </Label>
           <Textarea
             id="content"
             value={formData.content}
             onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            placeholder="分享你的想法、感受或故事..."
+            placeholder={t('createPost.contentPlaceholder')}
             className="rounded-2xl min-h-[200px] resize-none text-base"
             maxLength={2000}
           />
           <p className="text-xs text-gray-500 mt-2">{formData.content.length}/2000</p>
         </Card>
 
-        {/* Image Upload */}
         <Card className="p-6 rounded-3xl shadow-sm border-0">
           <Label className="text-sm font-semibold text-gray-900 mb-3 block">
-            图片（可选）
+            {t('createPost.imageLabel')}
           </Label>
           {formData.image_url ? (
             <div className="relative rounded-2xl overflow-hidden">
@@ -287,7 +280,7 @@ export default function CreatePost() {
             <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-gray-200 rounded-3xl cursor-pointer hover:border-teal-500 transition-colors">
               <ImageIcon className="w-8 h-8 text-gray-400 mb-2" />
               <p className="text-sm text-gray-500">
-                {uploading ? '上传中...' : '点击上传图片'}
+                {uploading ? t('createPost.uploading') : t('createPost.uploadPrompt')}
               </p>
               <input
                 ref={fileInputRef}
@@ -301,17 +294,16 @@ export default function CreatePost() {
           )}
         </Card>
 
-        {/* Tags */}
         <Card className="p-6 rounded-3xl shadow-sm border-0">
           <Label className="text-sm font-semibold text-gray-900 mb-3 block">
-            标签（最多5个）
+            {t('createPost.tagsLabel')}
           </Label>
           <div className="flex gap-2 mb-3">
             <Input
               value={tagInput}
               onChange={(e) => setTagInput(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddTag()}
-              placeholder="输入标签后回车"
+              placeholder={t('createPost.tagPlaceholder')}
               className="rounded-2xl h-10"
               disabled={formData.tags.length >= 5}
             />
@@ -320,7 +312,7 @@ export default function CreatePost() {
               disabled={formData.tags.length >= 5 || !tagInput.trim()}
               className="rounded-2xl"
             >
-              添加
+              {t('createPost.addTag')}
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
@@ -341,16 +333,15 @@ export default function CreatePost() {
           </div>
         </Card>
 
-        {/* Tips */}
         <Card className="p-4 rounded-3xl bg-purple-50 border-purple-100">
           <div className="flex gap-3">
-            <div className="text-lg">💡</div>
+            <div className="text-lg">ℹ️</div>
             <div>
-              <p className="text-sm font-medium text-purple-900 mb-1">发布提示</p>
+              <p className="text-sm font-medium text-purple-900 mb-1">{t('createPost.tipsTitle')}</p>
               <ul className="text-xs text-purple-700 space-y-1">
-                <li>• 请尊重他人，友善交流</li>
-                <li>• 避免透露个人隐私信息</li>
-                <li>• 如遇紧急情况请寻求专业帮助</li>
+                <li>• {t('createPost.tip1')}</li>
+                <li>• {t('createPost.tip2')}</li>
+                <li>• {t('createPost.tip3')}</li>
               </ul>
             </div>
           </div>
