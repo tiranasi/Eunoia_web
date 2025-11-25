@@ -76,8 +76,10 @@ export default function EunoiaHome() {
   const generateDailyQuote = async () => {
     setLoadingQuote(true);
     try {
+      const languageName = t('language.current');
+      const prompt = t('home.daily.prompt', { lang: languageName });
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: '请生成一句温暖、积极的短句（不超过30字），鼓励读者，语气友好而轻盈。只返回句子本身。',
+        prompt,
       });
       setDailyQuote(response);
     } catch (error) {

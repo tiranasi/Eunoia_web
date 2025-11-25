@@ -9,12 +9,12 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from '@/i18n';
 
 const benefits = [
-  { titleKey: 'plus.benefit.chat', free: '30/天', plus: '无限*', description: '*Fair Use: 60/小时' },
-  { titleKey: 'plus.benefit.style', free: '4套', plus: '20套', description: '自定义聊天风格' },
-  { titleKey: 'plus.benefit.report', free: '1/天', plus: '无限', description: '随时了解情绪变化' },
-  { titleKey: 'plus.benefit.trend', free: '不支持', plus: '✔ 支持', description: '创建趋势分析' },
-  { titleKey: 'plus.benefit.courseTrial', free: '1节', plus: '3-5节', description: '更多课程试听' },
-  { titleKey: 'plus.benefit.courseDiscount', free: '原价', plus: '9折优惠', description: '课程专属优惠' },
+  { titleKey: 'plus.benefit.chat', freeKey: 'plus.benefit.chat.free', plusKey: 'plus.benefit.chat.plus', descKey: 'plus.benefit.chat.desc' },
+  { titleKey: 'plus.benefit.style', freeKey: 'plus.benefit.style.free', plusKey: 'plus.benefit.style.plus', descKey: 'plus.benefit.style.desc' },
+  { titleKey: 'plus.benefit.report', freeKey: 'plus.benefit.report.free', plusKey: 'plus.benefit.report.plus', descKey: 'plus.benefit.report.desc' },
+  { titleKey: 'plus.benefit.trend', freeKey: 'plus.benefit.trend.free', plusKey: 'plus.benefit.trend.plus', descKey: 'plus.benefit.trend.desc' },
+  { titleKey: 'plus.benefit.courseTrial', freeKey: 'plus.benefit.courseTrial.free', plusKey: 'plus.benefit.courseTrial.plus', descKey: 'plus.benefit.courseTrial.desc' },
+  { titleKey: 'plus.benefit.courseDiscount', freeKey: 'plus.benefit.courseDiscount.free', plusKey: 'plus.benefit.courseDiscount.plus', descKey: 'plus.benefit.courseDiscount.desc' },
 ];
 
 export default function PlusSubscription() {
@@ -91,17 +91,17 @@ export default function PlusSubscription() {
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
                     <h4 className="font-semibold text-gray-900 text-sm mb-1">{t(benefit.titleKey, { defaultValue: benefit.titleKey })}</h4>
-                    <p className="text-xs text-gray-500">{benefit.description}</p>
+                    <p className="text-xs text-gray-500">{t(benefit.descKey)}</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-3 mt-3">
                   <div className="text-center p-2 rounded-xl bg-gray-50">
                     <p className="text-xs text-gray-500 mb-1">{t('plus.free')}</p>
-                    <p className="text-sm font-semibold text-gray-700">{benefit.free}</p>
+                    <p className="text-sm font-semibold text-gray-700">{t(benefit.freeKey)}</p>
                   </div>
                   <div className="text-center p-2 rounded-xl bg-amber-50">
                     <p className="text-xs text-amber-600 mb-1">{t('plus.planPlus')}</p>
-                    <p className="text-sm font-semibold text-amber-700">{benefit.plus}</p>
+                    <p className="text-sm font-semibold text-amber-700">{t(benefit.plusKey)}</p>
                   </div>
                 </div>
               </Card>
