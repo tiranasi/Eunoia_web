@@ -19,14 +19,24 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+function requireEnv(name) {
+  const value = process.env[name];
+  if (!value || value.trim().length === 0) {
+    throw new Error(`Missing required environment variable: ${name}`);
+  }
+  return value;
+}
+
 // Local uploads (serve via /api/uploads with relative URLs)
 const UPLOAD_DIR = path.join(__dirname, '..', 'uploads');
 try { fs.mkdirSync(UPLOAD_DIR, { recursive: true }); } catch {}
 app.use('/api/uploads', express.static(UPLOAD_DIR));
 
-// Admin defaults
+// Runtime configuration
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@eunoia.local';
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'Eunoia100390';
+const ADMIN_PASSWORD = requireEnv('ADMIN_PASSWORD');
+const JWT_SECRET = requireEnv('JWT_SECRET');
+const ZHIPU_API_KEY = requireEnv('ZHIPU_API_KEY');
 
 // Helper: normalize entity name to model
 const entityMap = {
@@ -144,7 +154,6 @@ function fromFrontend(entity, data) {
 }
 
 // Auth
-const JWT_SECRET = process.env.JWT_SECRET || 'dev_local_secret_change_me';
 function authRequired(req, res, next) {
   const auth = req.headers['authorization'] || '';
   const m = auth.match(/^Bearer\s+(.+)$/i);
@@ -456,7 +465,6 @@ app.get('/api/admin/stats', authRequired, adminRequired, async (_req, res) => {
 // LLM stub
 app.post('/api/integrations/core/invokeLLM', async (req, res) => {
   const { prompt, response_json_schema, model } = req.body || {};
-  const apiKey = process.env.ZHIPU_API_KEY || '924d79a437dc4995aba6e4be987895e1.r1UQBsHSoY0zFZAo';
   const usedModel = model || 'glm-4.5-flash';
 
   if (!prompt || typeof prompt !== 'string' || prompt.trim().length === 0) {
@@ -478,7 +486,7 @@ app.post('/api/integrations/core/invokeLLM', async (req, res) => {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
+        'Authorization': `Bearer ${ZHIPU_API_KEY}`,
       },
       body: JSON.stringify({ model: usedModel, messages }),
     });
